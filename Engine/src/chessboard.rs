@@ -89,17 +89,20 @@ impl Chessboard {
             return;
         }
 
-        // 4
+        // 4, 5
         let is_move_blocked = match color {
             true => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
-                    Piece::check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                    self.black.has_piece_on(to)
+                        || self.black.get_piece_type(to) == Ok(PieceType::King)
+                        || Piece::check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
                 },
                 PieceType::King => {
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
                         || self.black.has_king_around(to)
+                        || Piece::is_king_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
                 },
                 _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
             },
@@ -110,8 +113,6 @@ impl Chessboard {
             println!("Move blocked");
             return;
         }
-
-        // 5 TODO
 
         let move_result = if color {
             self.white.make_move(from, to)

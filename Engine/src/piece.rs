@@ -234,3 +234,11 @@ fn check_pawn_move_blocked_top_to_bottom(from_rank: u64, rank_diff: i64, file_di
 
     false
 }
+
+pub fn is_king_move_blocked(from: u64, to: u64, color: bool, board: u64, white_board: u64, black_board: u64) -> bool {
+    let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
+
+    // TODO check if the king is not in check
+
+    false
+}
