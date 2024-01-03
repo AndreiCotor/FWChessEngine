@@ -34,6 +34,10 @@ impl Bitboard {
         self.board
     }
 
+    pub fn set_board(&mut self, board: u64) {
+        self.board = board;
+    }
+
     pub fn get_num_squares(&self) -> usize {
         self.board.count_ones() as usize
     }
