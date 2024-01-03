@@ -101,7 +101,7 @@ impl Chessboard {
             true => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
-                    self.black.has_piece_on(to)
+                    self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
                         || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
                 },
@@ -116,7 +116,7 @@ impl Chessboard {
             false => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
-                    self.white.has_piece_on(to)
+                    self.black.has_piece_on(to)
                         || self.white.get_piece_type(to) == Ok(PieceType::King)
                         || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
                 },

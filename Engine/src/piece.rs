@@ -23,13 +23,13 @@ pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), P
     let (from_rank, rank_diff, file_diff) = result.unwrap();
 
     if orientation {
-        is_pawn_move_valid_for_black(from_rank, rank_diff, file_diff)
-    } else {
         is_pawn_move_valid_for_white(from_rank, rank_diff, file_diff)
+    } else {
+        is_pawn_move_valid_for_black(from_rank, rank_diff, file_diff)
     }
 }
 
-fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_white(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
         return Ok(());
     }
@@ -49,7 +49,7 @@ fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) 
     Err(PieceError::InvalidMove)
 }
 
-fn is_pawn_move_valid_for_white(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
         return Ok(());
     }
@@ -179,13 +179,13 @@ pub fn check_pawn_move_blocked(from: u64, to: u64, orientation: bool, board: Bit
     let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
 
     if orientation {
-        check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
-    } else {
         check_pawn_move_blocked_for_white(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
+    } else {
+        check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
     }
 }
 
-fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, white_board: Player, mut black_board: Player, from: u64, to: u64) -> bool {
+fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, white_board: Player, mut black_board: Player, from: u64, to: u64) -> bool {
     //  account for en passant and promotion and capture
 
     if white_board.has_piece_on(to) {
@@ -214,7 +214,7 @@ fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: 
     false
 }
 
-fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, mut white_board: Player, black_board: Player, from: u64, to: u64) -> bool {
+fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, mut white_board: Player, black_board: Player, from: u64, to: u64) -> bool {
 
     if black_board.has_piece_on(to) {
         return true;

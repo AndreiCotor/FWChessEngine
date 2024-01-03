@@ -25,9 +25,9 @@ mod tests {
         assert_eq!(chessboard.perform_move("c4", "c3", false), Ok(()));
         assert_eq!(chessboard.perform_move("c3", "c2", false), Err(MoveError::SquareOccupied));
 
-        assert_eq!(chessboard.perform_move("c3", "d2", true), Ok(()));
-        assert_eq!(chessboard.perform_move("d2", "e1", true), Err(MoveError::SquareOccupied));
-        assert_eq!(chessboard.perform_move("d2", "d1", true), Err(MoveError::InvalidMove));
-        assert_eq!(chessboard.perform_move("d2", "c1", true), Ok(()));
+        assert_eq!(chessboard.perform_move("c3", "d2", false), Ok(()));
+        assert_eq!(chessboard.perform_move("d2", "e1", false), Err(MoveError::SquareOccupied));
+        assert_eq!(chessboard.perform_move("d2", "d1", false), Err(MoveError::SquareOccupied));
+        assert_eq!(chessboard.perform_move("d2", "c1", false), Ok(()));
     }
 }
