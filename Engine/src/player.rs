@@ -109,4 +109,13 @@ impl Player {
     pub fn has_piece_on(&self, position: u64) -> bool {
         self.pieces.get_square(position)
     }
+
+    pub fn has_king_around(&self, position: u64) -> bool {
+        let mut king = self.king.get_board();
+        king &= !(1 << position);
+
+        let mut king_board = Bitboard::from(king);
+
+        king_board.get_num_squares() > 0
+    }
 }

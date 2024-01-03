@@ -60,7 +60,6 @@ impl Chessboard {
         // 4. Check if the move is blocked by another piece
         // 5. Check if the move puts the king in check
 
-
         // 1, 2
         let piece_type = if color {
             self.white.get_piece_type(from)
@@ -78,7 +77,11 @@ impl Chessboard {
         // 3
         let is_move_valid = match piece_type {
             PieceType::Pawn => Piece::is_pawn_move_valid(from, to, color),
-            _ => Err(()),
+            PieceType::Knight => Piece::is_knight_move_valid(from, to),
+            PieceType::Bishop => Piece::is_bishop_move_valid(from, to),
+            PieceType::Rook => Piece::is_rook_move_valid(from, to),
+            PieceType::Queen => Piece::is_queen_move_valid(from, to),
+            PieceType::King => Piece::is_king_move_valid(from, to),
         };
 
         if is_move_valid.is_err() {
@@ -88,7 +91,18 @@ impl Chessboard {
 
         // 4
         let is_move_blocked = match color {
-            true => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
+            true => match piece_type {
+                PieceType::Pawn => {
+                    // account for en passant and promotion and capture
+                    Piece::check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                },
+                PieceType::King => {
+                    self.white.has_piece_on(to)
+                        || self.black.get_piece_type(to) == Ok(PieceType::King)
+                        || self.black.has_king_around(to)
+                },
+                _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
+            },
             false => self.black.has_piece_on(to) || self.white.get_piece_type(to) == Ok(PieceType::King),
         };
 
