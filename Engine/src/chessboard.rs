@@ -110,22 +110,6 @@ impl Chessboard {
         self.black.pieces.get_board()
     }
 
-    // pub fn get_num_squares(&self) -> usize {
-    //     self.board.get_num_squares()
-    // }
-    //
-    // pub fn get_square(&self, square: usize) -> bool {
-    //     self.board.get_square(square)
-    // }
-    //
-    // pub fn set_square(&mut self, square: usize) {
-    //     self.board.set_square(square);
-    // }
-    //
-    // pub fn clear_square(&mut self, square: usize) {
-    //     self.board.clear_square(square);
-    // }
-
     pub fn perform_move(&mut self, from: &str, to: &str, color: bool) {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
