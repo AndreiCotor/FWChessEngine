@@ -18,15 +18,15 @@ impl Bitboard {
         }
     }
 
-    pub fn set_square(&mut self, square: usize) {
+    pub fn set_square(&mut self, square: u64) {
         self.board |= 1 << square;
     }
 
-    pub fn clear_square(&mut self, square: usize) {
+    pub fn clear_square(&mut self, square: u64) {
         self.board &= !(1 << square);
     }
 
-    pub fn get_square(&self, square: usize) -> bool {
+    pub fn get_square(&self, square: u64) -> bool {
         (self.board & (1 << square)) != 0
     }
 
@@ -38,7 +38,7 @@ impl Bitboard {
         self.board = board;
     }
 
-    pub fn get_num_squares(&self) -> usize {
-        self.board.count_ones() as usize
+    pub fn get_num_squares(&self) -> u64 {
+        self.board.count_ones() as u64
     }
 }
