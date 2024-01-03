@@ -1,3 +1,4 @@
+use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::MoveError;
 use crate::piece::{check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked,
@@ -102,7 +103,7 @@ impl Chessboard {
                     // account for en passant and promotion and capture
                     self.black.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
-                        || check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                        || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
                 },
                 PieceType::King => {
                     self.white.has_piece_on(to)
@@ -117,7 +118,7 @@ impl Chessboard {
                     // account for en passant and promotion and capture
                     self.white.has_piece_on(to)
                         || self.white.get_piece_type(to) == Ok(PieceType::King)
-                        || check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                        || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
                 },
                 PieceType::King => {
                     self.black.has_piece_on(to)
@@ -142,14 +143,21 @@ impl Chessboard {
         println!("After move: ");
         Chessboard::print_board(self);
 
-        return match move_result {
-            Ok(_) => {
-                Ok(())
-            },
-            Err(_) => {
-                Err(MoveError::InvalidMove)
-            },
+        if move_result.is_err() {
+            return Err(MoveError::InvalidMove);
         }
+
+        let capture_piece_if_exists = if color {
+            self.black.update_table_after_opponent_move(to)
+        } else {
+            self.white.update_table_after_opponent_move(to)
+        };
+
+        if capture_piece_if_exists.is_err() {
+            return Err(MoveError::InvalidMove);
+        }
+
+        Ok(())
     }
 
     fn convert_square_to_index(square: &str) -> u64 {

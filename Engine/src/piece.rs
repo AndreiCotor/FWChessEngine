@@ -1,3 +1,4 @@
+use crate::bitboard::Bitboard;
 use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::PieceError;
 use crate::player::Player;
@@ -22,13 +23,13 @@ pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), P
     let (from_rank, rank_diff, file_diff) = result.unwrap();
 
     if orientation {
-        is_pawn_move_valid_bottom_to_top(from_rank, rank_diff, file_diff)
+        is_pawn_move_valid_for_black(from_rank, rank_diff, file_diff)
     } else {
-        is_pawn_move_valid_top_to_bottom(from_rank, rank_diff, file_diff)
+        is_pawn_move_valid_for_white(from_rank, rank_diff, file_diff)
     }
 }
 
-fn is_pawn_move_valid_bottom_to_top(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
         return Ok(());
     }
@@ -48,7 +49,7 @@ fn is_pawn_move_valid_bottom_to_top(from_rank: u64, rank_diff: i64, file_diff: i
     Err(PieceError::InvalidMove)
 }
 
-fn is_pawn_move_valid_top_to_bottom(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_white(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
         return Ok(());
     }
@@ -174,64 +175,68 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
     Ok((from_rank, rank_diff, file_diff))
 }
 
-pub fn check_pawn_move_blocked(from: u64, to: u64, orientation: bool, board: u64, white_board: u64, black_board: u64) -> bool {
+pub fn check_pawn_move_blocked(from: u64, to: u64, orientation: bool, board: Bitboard, white_board: Player, black_board: Player) -> bool {
     let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
 
     if orientation {
-        check_pawn_move_blocked_bottom_to_top(from_rank, rank_diff, file_diff, board, white_board, black_board, to)
+        check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
     } else {
-        check_pawn_move_blocked_top_to_bottom(from_rank, rank_diff, file_diff, board, white_board, black_board, to)
+        check_pawn_move_blocked_for_white(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
     }
 }
 
-fn check_pawn_move_blocked_bottom_to_top(from_rank: u64, rank_diff: i64, file_diff: i64, board: u64, white_board: u64, black_board: u64, to: u64) -> bool {
+fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, white_board: Player, mut black_board: Player, from: u64, to: u64) -> bool {
     //  account for en passant and promotion and capture
 
-    if (white_board & (1 << to)) != 0 {
+    if white_board.has_piece_on(to) {
         return true;
     }
 
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
-        return (board & (1 << (from_rank + 1) * 8 + file_diff as u64)) != 0
-            || (board & (1 << (from_rank + 2) * 8 + file_diff as u64)) != 0;
+        return !board.is_square_empty(from + BOARD_SIZE)
+            || !board.is_square_empty(from + 2*BOARD_SIZE);
     }
 
     if rank_diff == 1 && file_diff == 0 {
-        return (board & (1 << (from_rank + 1) * 8 + file_diff as u64)) != 0;
+        return !board.is_square_empty(from + BOARD_SIZE);
     }
 
     if rank_diff == 1 && file_diff == 1 {
-        return (black_board & (1 << (from_rank + 1) * 8 + file_diff as u64)) != 0;
+        return !white_board.pawns.is_square_empty(from + 9) ||
+            black_board.get_piece_type(from + 9).unwrap().eq(&PieceType::King);
     }
 
     if rank_diff == 1 && file_diff == -1 {
-        return (black_board & (1 << (from_rank + 1) * 8 + file_diff as u64)) != 0;
+        return !white_board.pawns.is_square_empty(from + 7)
+            || black_board.get_piece_type(from + 7).unwrap().eq(&PieceType::King);
     }
 
     false
 }
 
-fn check_pawn_move_blocked_top_to_bottom(from_rank: u64, rank_diff: i64, file_diff: i64, board: u64, white_board: u64, black_board: u64, to: u64) -> bool {
+fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, mut white_board: Player, black_board: Player, from: u64, to: u64) -> bool {
 
-    if (black_board & (1 << to)) != 0 {
+    if black_board.has_piece_on(to) {
         return true;
     }
 
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
-        return (board & (1 << (from_rank - 1) * 8 + file_diff as u64)) != 0
-            || (board & (1 << (from_rank - 2) * 8 + file_diff as u64)) != 0;
+        return !board.is_square_empty(from - BOARD_SIZE)
+            || !board.is_square_empty(from - 2*BOARD_SIZE);
     }
 
     if rank_diff == -1 && file_diff == 0 {
-        return (board & (1 << (from_rank - 1) * 8 + file_diff as u64)) != 0;
+        return !board.is_square_empty(from - BOARD_SIZE);
     }
 
     if rank_diff == -1 && file_diff == 1 {
-        return (white_board & (1 << (from_rank - 1) * 8 + file_diff as u64)) != 0;
+        return !black_board.pawns.is_square_empty(from - 7)
+            || white_board.get_piece_type(from - 7).unwrap().eq(&PieceType::King);
     }
 
     if rank_diff == -1 && file_diff == -1 {
-        return (white_board & (1 << (from_rank - 1) * 8 + file_diff as u64)) != 0;
+        return !black_board.pawns.is_square_empty(from - 9)
+            || white_board.get_piece_type(from - 9).unwrap().eq(&PieceType::King);
     }
 
     false

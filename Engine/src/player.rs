@@ -125,7 +125,7 @@ impl Player {
             Ok(PieceType::King) => {
                 self.king.clear_square(to);
             },
-            Err(_) => return Err(BitboardError::PieceNotFound),
+            Err(_) => (),
         }
 
         Ok(())

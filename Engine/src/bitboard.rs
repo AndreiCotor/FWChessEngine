@@ -42,4 +42,8 @@ impl Bitboard {
     pub fn get_num_squares(&self) -> u64 {
         self.board.count_ones() as u64
     }
+
+    pub fn is_square_empty(&self, square: u64) -> bool {
+        !self.get_square(square)
+    }
 }
