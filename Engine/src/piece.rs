@@ -235,10 +235,304 @@ fn check_pawn_move_blocked_top_to_bottom(from_rank: u64, rank_diff: i64, file_di
     false
 }
 
-pub fn is_king_move_blocked(from: u64, to: u64, color: bool, board: u64, white_board: u64, black_board: u64) -> bool {
-    let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
+pub fn is_king_move_blocked(to: u64, color: bool, board: u64, white_board: Player, black_board: Player) -> bool {
 
-    // TODO check if the king is not in check
+    if color {
+        check_king_in_check(to, board, black_board, color)
+    } else {
+        check_king_in_check(to, board, white_board, color)
+    }
+}
+
+fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: bool) -> bool {
+
+    let mut opponent_pieces = opponent.pieces.get_board();
+
+    let mut opponent_pawns = opponent.pawns.get_board();
+    let mut opponent_knights = opponent.knights.get_board();
+    let mut opponent_bishops = opponent.bishops.get_board();
+    let mut opponent_rooks = opponent.rooks.get_board();
+    let mut opponent_queen = opponent.queen.get_board();
+    let mut opponent_king = opponent.king.get_board();
+
+    opponent_pieces &= !(1 << king_pos);
+
+    opponent_pawns &= opponent_pieces;
+    opponent_knights &= opponent_pieces;
+    opponent_bishops &= opponent_pieces;
+    opponent_rooks &= opponent_pieces;
+    opponent_queen &= opponent_pieces;
+    opponent_king &= opponent_pieces;
+
+    let mut opponent_pawn_moves = 0;
+    let mut opponent_knight_moves = 0;
+    let mut opponent_bishop_moves = 0;
+    let mut opponent_rook_moves = 0;
+    let mut opponent_queen_moves = 0;
+    let mut opponent_king_moves = 0;
+
+    for i in 0..NUM_SQUARES {
+        if (opponent_pawns & (1 << i)) != 0 {
+            opponent_pawn_moves |= get_pawn_moves(i, color);
+        }
+
+        if (opponent_knights & (1 << i)) != 0 {
+            opponent_knight_moves |= get_knight_moves(i);
+        }
+
+        if (opponent_bishops & (1 << i)) != 0 {
+            opponent_bishop_moves |= get_bishop_moves(i, board);
+        }
+
+        if (opponent_rooks & (1 << i)) != 0 {
+            opponent_rook_moves |= get_rook_moves(i, board);
+        }
+
+        if (opponent_queen & (1 << i)) != 0 {
+            opponent_queen_moves |= get_queen_moves(i, board);
+        }
+
+        if (opponent_king & (1 << i)) != 0 {
+            opponent_king_moves |= get_king_moves(i);
+        }
+    }
+
+    if (opponent_pawn_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
+
+    if (opponent_knight_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
+
+    if (opponent_bishop_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
+
+    if (opponent_rook_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
+
+    if (opponent_queen_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
+
+    if (opponent_king_moves & (1 << king_pos)) != 0 {
+        return true;
+    }
 
     false
+}
+
+fn get_pawn_moves(pos: u64, color: bool) -> u64 {
+
+    let mut moves = 0;
+
+    if color {
+        if pos < 56 {
+            moves |= 1 << (pos + 8);
+        }
+    } else {
+        if pos > 7 {
+            moves |= 1 << (pos - 8);
+        }
+    }
+
+    if pos % 8 != 0 {
+        if color {
+            if pos < 56 {
+                moves |= 1 << (pos + 7);
+            }
+        } else {
+            if pos > 7 {
+                moves |= 1 << (pos - 9);
+            }
+        }
+    }
+
+    if pos % 8 != 7 {
+        if color {
+            if pos < 56 {
+                moves |= 1 << (pos + 9);
+            }
+        } else {
+            if pos > 7 {
+                moves |= 1 << (pos - 7);
+            }
+        }
+    }
+
+    moves
+}
+
+pub fn get_knight_moves(pos: u64) -> u64 {
+    let mut moves = 0;
+
+    if pos % 8 > 1 {
+        if pos < 56 {
+            moves |= 1 << (pos + 6);
+        }
+
+        if pos > 7 {
+            moves |= 1 << (pos - 10);
+        }
+    }
+
+    if pos % 8 > 0 {
+        if pos < 48 {
+            moves |= 1 << (pos + 15);
+        }
+
+        if pos > 15 {
+            moves |= 1 << (pos - 17);
+        }
+    }
+
+    if pos % 8 < 6 {
+        if pos < 56 {
+            moves |= 1 << (pos + 10);
+        }
+
+        if pos > 7 {
+            moves |= 1 << (pos - 6);
+        }
+    }
+
+    if pos % 8 < 7 {
+        if pos < 48 {
+            moves |= 1 << (pos + 17);
+        }
+
+        if pos > 15 {
+            moves |= 1 << (pos - 15);
+        }
+    }
+
+    moves
+}
+
+pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
+    let mut moves = 0;
+
+    let mut i = pos + 9;
+    while i < NUM_SQUARES && i % 8 != 0 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i += 9;
+    }
+
+    i = pos + 7;
+    while i < NUM_SQUARES && i % 8 != 7 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i += 7;
+    }
+
+    i = pos - 9;
+    while i >= 0 && i % 8 != 7 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i -= 9;
+    }
+
+    i = pos - 7;
+    while i >= 0 && i % 8 != 0 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i -= 7;
+    }
+
+    moves
+}
+
+pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
+    let mut moves = 0;
+
+    let mut i = pos + 8;
+    while i < NUM_SQUARES {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i += 8;
+    }
+
+    i = pos - 8;
+    while i >= 0 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i -= 8;
+    }
+
+    i = pos + 1;
+    while i < NUM_SQUARES && i % 8 != 0 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i += 1;
+    }
+
+    i = pos - 1;
+    while i >= 0 && i % 8 != 7 {
+        moves |= 1 << i;
+        if (board & (1 << i)) != 0 {
+            break;
+        }
+        i -= 1;
+    }
+
+    moves
+}
+
+pub fn get_queen_moves(pos: u64, board: u64) -> u64 {
+    get_bishop_moves(pos, board) | get_rook_moves(pos, board)
+}
+
+pub fn get_king_moves(pos: u64) -> u64 {
+    let mut moves = 0;
+
+    if pos < 56 {
+        moves |= 1 << (pos + 8);
+    }
+
+    if pos > 7 {
+        moves |= 1 << (pos - 8);
+    }
+
+    if pos % 8 != 0 {
+        if pos < 56 {
+            moves |= 1 << (pos + 7);
+        }
+
+        if pos > 7 {
+            moves |= 1 << (pos - 9);
+        }
+
+        moves |= 1 << (pos - 1);
+    }
+
+    if pos % 8 != 7 {
+        if pos < 56 {
+            moves |= 1 << (pos + 9);
+        }
+
+        if pos > 7 {
+            moves |= 1 << (pos - 7);
+        }
+
+        moves |= 1 << (pos + 1);
+    }
+
+    moves
 }

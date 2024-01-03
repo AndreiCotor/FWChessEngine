@@ -102,7 +102,7 @@ impl Chessboard {
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
                         || self.black.has_king_around(to)
-                        || Piece::is_king_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                        || Piece::is_king_move_blocked(from, to, color, self.get_board(), self.white.clone(), self.black.clone())
                 },
                 _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
             },

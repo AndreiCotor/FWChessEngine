@@ -2,6 +2,7 @@ use crate::bitboard::{Bitboard};
 use crate::exceptions::{BitboardError, PieceError};
 use crate::piece::PieceType;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Player {
     pub color: bool, // true = white, false = black
     pub pieces: Bitboard,
