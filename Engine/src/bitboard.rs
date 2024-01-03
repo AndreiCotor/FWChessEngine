@@ -1,5 +1,6 @@
 
 
+#[derive(Copy, Clone, Debug)]
 pub struct Bitboard {
     pub board: u64,
 }

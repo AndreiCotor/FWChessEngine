@@ -1,19 +1,21 @@
-use crate::bitboard::{Bitboard};
 use crate::constants::BOARD_SIZE;
-use crate::piece::PieceType;
+use crate::exceptions::MoveError;
+use crate::piece::{check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked,
+                   is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
+                   is_queen_move_valid, is_rook_move_valid, PieceType};
 use crate::player::Player;
 
 
 // Table orientation:
 //   a b c d e f g h
-// 8|
-// 7|
-// 6|
-// 5|
-// 4|
-// 3|
-// 2|8 9 ...
-// 1|0 1 2 3 4 5 6 7
+// 1 ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜
+// 2 ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟
+// 3
+// 4
+// 5
+// 6
+// 7 ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙
+// 8 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
 
 // convention: true = white, false = black
 // white on bottom, black on top
@@ -49,9 +51,15 @@ impl Chessboard {
         self.black.pieces.get_board()
     }
 
-    pub fn perform_move(&mut self, from: &str, to: &str, color: bool) {
+    pub fn perform_move(&mut self, from: &str, to: &str, color: bool) -> Result<(), MoveError> {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
+
+        println!("Before move: ");
+        Chessboard::print_board(self);
+
+        println!("From: {}", from);
+        println!("To: {}", to);
 
         // Validation steps:
         // 1. Check if the piece is on the board
@@ -68,25 +76,23 @@ impl Chessboard {
         };
 
         if piece_type.is_err() {
-            println!("Invalid piece");
-            return;
+             return Err(MoveError::PieceNotFound);
         }
 
         let piece_type = piece_type.unwrap();
 
         // 3
         let is_move_valid = match piece_type {
-            PieceType::Pawn => Piece::is_pawn_move_valid(from, to, color),
-            PieceType::Knight => Piece::is_knight_move_valid(from, to),
-            PieceType::Bishop => Piece::is_bishop_move_valid(from, to),
-            PieceType::Rook => Piece::is_rook_move_valid(from, to),
-            PieceType::Queen => Piece::is_queen_move_valid(from, to),
-            PieceType::King => Piece::is_king_move_valid(from, to),
+            PieceType::Pawn => is_pawn_move_valid(from, to, color),
+            PieceType::Knight => is_knight_move_valid(from, to),
+            PieceType::Bishop => is_bishop_move_valid(from, to),
+            PieceType::Rook => is_rook_move_valid(from, to),
+            PieceType::Queen => is_queen_move_valid(from, to),
+            PieceType::King => is_king_move_valid(from, to),
         };
 
         if is_move_valid.is_err() {
-            println!("Invalid move");
-            return;
+            return Err(MoveError::InvalidMove);
         }
 
         // 4, 5
@@ -96,22 +102,35 @@ impl Chessboard {
                     // account for en passant and promotion and capture
                     self.black.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
-                        || Piece::check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                        || check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
                 },
                 PieceType::King => {
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
                         || self.black.has_king_around(to)
-                        || Piece::is_king_move_blocked(from, to, color, self.get_board(), self.white.clone(), self.black.clone())
+                        || is_king_move_blocked(to, color, self.get_board(), self.white.clone(), self.black.clone())
                 },
                 _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
             },
-            false => self.black.has_piece_on(to) || self.white.get_piece_type(to) == Ok(PieceType::King),
+            false => match piece_type {
+                PieceType::Pawn => {
+                    // account for en passant and promotion and capture
+                    self.white.has_piece_on(to)
+                        || self.white.get_piece_type(to) == Ok(PieceType::King)
+                        || check_pawn_move_blocked(from, to, color, self.get_board(), self.get_white_board(), self.get_black_board())
+                },
+                PieceType::King => {
+                    self.black.has_piece_on(to)
+                        || self.white.get_piece_type(to) == Ok(PieceType::King)
+                        || self.white.has_king_around(to)
+                        || is_king_move_blocked(to, color, self.get_board(), self.white.clone(), self.black.clone())
+                },
+                _ => self.black.has_piece_on(to) || self.white.get_piece_type(to) == Ok(PieceType::King),
+            }
         };
 
         if is_move_blocked {
-            println!("Move blocked");
-            return;
+            return Err(MoveError::SquareOccupied);
         }
 
         let move_result = if color {
@@ -120,12 +139,15 @@ impl Chessboard {
             self.black.make_move(from, to)
         };
 
-        match move_result {
+        println!("After move: ");
+        Chessboard::print_board(self);
+
+        return match move_result {
             Ok(_) => {
-                println!("Move successful");
+                Ok(())
             },
             Err(_) => {
-                println!("Invalid move");
+                Err(MoveError::InvalidMove)
             },
         }
     }
@@ -145,5 +167,18 @@ impl Chessboard {
         let file = (file as u8 + 'a' as u8) as char;
         let rank = (rank as u8 + '1' as u8) as char;
         format!("{}{}", file, rank)
+    }
+
+    fn print_board(&self) {
+        let board = self.get_board();
+        let mut board = format!("{:064b}", board);
+        board = board.chars().rev().collect::<String>();
+        let mut board = board.chars();
+        for _ in 0..BOARD_SIZE {
+            for _ in 0..BOARD_SIZE {
+                print!("{} ", board.next().unwrap());
+            }
+            println!();
+        }
     }
 }

@@ -2,6 +2,7 @@ use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::PieceError;
 use crate::player::Player;
 
+#[derive(PartialEq)]
 pub enum PieceType {
     Pawn,
     Knight,
@@ -151,7 +152,7 @@ pub fn is_king_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
 }
 
 fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceError> {
-    if (from == to) || (from < 0) || (from >= NUM_SQUARES) || (to < 0) || (to >= NUM_SQUARES) {
+    if (from == to) || (from >= NUM_SQUARES) || (to >= NUM_SQUARES) {
         return Err(PieceError::InvalidMove);
     }
 
@@ -161,13 +162,14 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
     let from_file = from % 8;
     let to_file = to % 8;
 
-    if from_rank < 0 || from_rank >= BOARD_SIZE
-        || to_rank < 0 || to_rank >= BOARD_SIZE {
+    if from_rank >= BOARD_SIZE || to_rank >= BOARD_SIZE {
         return Err(PieceError::InvalidMove);
     }
 
-    let rank_diff: i64 = (to_rank - from_rank) as i64;
-    let file_diff: i64 = (to_file - from_file) as i64;
+    let to_rank: i64 = to_rank as i64;
+    let to_file: i64 = to_file as i64;
+    let rank_diff: i64 = to_rank - from_rank as i64;
+    let file_diff: i64 = to_file - from_file as i64;
 
     Ok((from_rank, rank_diff, file_diff))
 }

@@ -1,8 +1,9 @@
 use crate::bitboard::{Bitboard};
+use crate::constants::BOARD_SIZE;
 use crate::exceptions::{BitboardError, PieceError};
 use crate::piece::PieceType;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Player {
     pub color: bool, // true = white, false = black
     pub pieces: Bitboard,
@@ -19,7 +20,7 @@ impl Player {
     pub fn new(color: bool) -> Player {
 
         let mut pawns: Bitboard = Bitboard::new();
-        for i in 0..crate::chessboard::BOARD_SIZE {
+        for i in 0..BOARD_SIZE {
             pawns.set_square(i + if color { 8 } else { 48 });
         }
 
@@ -33,6 +34,7 @@ impl Player {
 
         let mut rooks: Bitboard = Bitboard::new();
         rooks.set_square(0 + if color { 0 } else { 56 });
+        rooks.set_square(7 + if color { 0 } else { 56 });
 
         let mut queen: Bitboard = Bitboard::new();
         queen.set_square(3 + if color { 0 } else { 56 });
@@ -42,7 +44,7 @@ impl Player {
 
         let mut pieces: Bitboard = Bitboard::new();
         pieces.set_board(
-            | pawns.get_board()
+                 pawns.get_board()
                 | knights.get_board()
                 | bishops.get_board()
                 | rooks.get_board()
@@ -70,11 +72,61 @@ impl Player {
         self.pieces.clear_square(from);
         self.pieces.set_square(to);
 
+        match Player::get_piece_type(self, from) {
+            Ok(PieceType::Pawn) => {
+                self.pawns.clear_square(from);
+                self.pawns.set_square(to);
+            },
+            Ok(PieceType::Knight) => {
+                self.knights.clear_square(from);
+                self.knights.set_square(to);
+            },
+            Ok(PieceType::Bishop) => {
+                self.bishops.clear_square(from);
+                self.bishops.set_square(to);
+            },
+            Ok(PieceType::Rook) => {
+                self.rooks.clear_square(from);
+                self.rooks.set_square(to);
+            },
+            Ok(PieceType::Queen) => {
+                self.queen.clear_square(from);
+                self.queen.set_square(to);
+            },
+            Ok(PieceType::King) => {
+                self.king.clear_square(from);
+                self.king.set_square(to);
+            },
+            Err(_) => return Err(BitboardError::PieceNotFound),
+        }
+
         Ok(())
     }
 
     pub fn update_table_after_opponent_move(&mut self, to: u64) -> Result<(), BitboardError> {
         self.pieces.clear_square(to);
+
+        match Player::get_piece_type(self, to) {
+            Ok(PieceType::Pawn) => {
+                self.pawns.clear_square(to);
+            },
+            Ok(PieceType::Knight) => {
+                self.knights.clear_square(to);
+            },
+            Ok(PieceType::Bishop) => {
+                self.bishops.clear_square(to);
+            },
+            Ok(PieceType::Rook) => {
+                self.rooks.clear_square(to);
+            },
+            Ok(PieceType::Queen) => {
+                self.queen.clear_square(to);
+            },
+            Ok(PieceType::King) => {
+                self.king.clear_square(to);
+            },
+            Err(_) => return Err(BitboardError::PieceNotFound),
+        }
 
         Ok(())
     }
@@ -115,8 +167,7 @@ impl Player {
         let mut king = self.king.get_board();
         king &= !(1 << position);
 
-        let mut king_board = Bitboard::from(king);
-
+        let king_board = Bitboard::from(king);
         king_board.get_num_squares() > 0
     }
 }
