@@ -10,4 +10,5 @@ pub enum BitboardError {
 pub enum PieceError {
     OutOfBounds,
     InvalidMove,
+    NoPiece,
 }

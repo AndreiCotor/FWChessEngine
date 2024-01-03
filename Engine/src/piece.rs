@@ -1,6 +1,15 @@
 use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::PieceError;
 
+pub enum PieceType {
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
+}
+
 pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), PieceError> {
 
     let result = basic_position_check(from, to);

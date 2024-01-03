@@ -1,5 +1,6 @@
 use crate::bitboard::{Bitboard};
 use crate::constants::BOARD_SIZE;
+use crate::piece::PieceType;
 use crate::player::Player;
 
 
@@ -14,12 +15,15 @@ use crate::player::Player;
 // 2|8 9 ...
 // 1|0 1 2 3 4 5 6 7
 
+// convention: true = white, false = black
+// white on bottom, black on top
 
 pub struct Chessboard {
-    pub board: Bitboard,
     pub white: Player,
     pub black: Player,
 }
+
+struct Piece(u64, u64, bool);
 
 impl Chessboard {
 
@@ -27,18 +31,14 @@ impl Chessboard {
         let white = Player::new(true);
         let black = Player::new(false);
 
-        let mut board= Bitboard::new();
-        board.set_board(white.pieces.get_board() | black.pieces.get_board());
-
         Chessboard {
-            board,
             white,
             black,
         }
     }
 
     pub fn get_board(&self) -> u64 {
-        self.board.get_board()
+        self.white.pieces.get_board() | self.black.pieces.get_board()
     }
 
     pub fn get_white_board(&self) -> u64 {
@@ -52,6 +52,52 @@ impl Chessboard {
     pub fn perform_move(&mut self, from: &str, to: &str, color: bool) {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
+
+        // Validation steps:
+        // 1. Check if the piece is on the board
+        // 2. Check if the piece is the correct color
+        // 3. Check if the move is valid for the piece
+        // 4. Check if the move is blocked by another piece
+        // 5. Check if the move puts the king in check
+
+
+        // 1, 2
+        let piece_type = if color {
+            self.white.get_piece_type(from)
+        } else {
+            self.black.get_piece_type(from)
+        };
+
+        if piece_type.is_err() {
+            println!("Invalid piece");
+            return;
+        }
+
+        let piece_type = piece_type.unwrap();
+
+        // 3
+        let is_move_valid = match piece_type {
+            PieceType::Pawn => Piece::is_pawn_move_valid(from, to, color),
+            _ => Err(()),
+        };
+
+        if is_move_valid.is_err() {
+            println!("Invalid move");
+            return;
+        }
+
+        // 4
+        let is_move_blocked = match color {
+            true => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
+            false => self.black.has_piece_on(to) || self.white.get_piece_type(to) == Ok(PieceType::King),
+        };
+
+        if is_move_blocked {
+            println!("Move blocked");
+            return;
+        }
+
+        // 5 TODO
 
         let move_result = if color {
             self.white.make_move(from, to)

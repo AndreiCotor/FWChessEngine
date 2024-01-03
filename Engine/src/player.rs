@@ -1,4 +1,6 @@
-use crate::bitboard::{Bitboard, BitboardError};
+use crate::bitboard::{Bitboard};
+use crate::exceptions::{BitboardError, PieceError};
+use crate::piece::PieceType;
 
 pub struct Player {
     pub color: bool, // true = white, false = black
@@ -64,15 +66,6 @@ impl Player {
     }
 
     pub fn make_move(&mut self, from: u64, to: u64) -> Result<(), BitboardError> {
-        //
-        // if (from >= NUM_SQUARES) || (to >= NUM_SQUARES) || (from == to) || (from < 0) || (to < 0) {
-        //     return Err(BitboardError::InvalidSquare);
-        // }
-        //
-        // if !self.pieces.get_square(from) {
-        //     return Err(BitboardError::SquareEmpty);
-        // }
-        //
         self.pieces.clear_square(from);
         self.pieces.set_square(to);
 
@@ -83,5 +76,37 @@ impl Player {
         self.pieces.clear_square(to);
 
         Ok(())
+    }
+
+    pub fn get_piece_type(&mut self, position: u64) -> Result<PieceType, PieceError> {
+        if self.pawns.get_square(position) {
+            return Ok(PieceType::Pawn);
+        }
+
+        if self.knights.get_square(position) {
+            return Ok(PieceType::Knight);
+        }
+
+        if self.bishops.get_square(position) {
+            return Ok(PieceType::Bishop);
+        }
+
+        if self.rooks.get_square(position) {
+            return Ok(PieceType::Rook);
+        }
+
+        if self.queen.get_square(position) {
+            return Ok(PieceType::Queen);
+        }
+
+        if self.king.get_square(position) {
+            return Ok(PieceType::King);
+        }
+
+        Err(PieceError::NoPiece)
+    }
+
+    pub fn has_piece_on(&self, position: u64) -> bool {
+        self.pieces.get_square(position)
     }
 }
