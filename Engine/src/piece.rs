@@ -11,6 +11,7 @@ pub enum PieceType {
     Rook,
     Queen,
     King,
+    None,
 }
 
 pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), PieceError> {

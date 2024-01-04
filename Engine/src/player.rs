@@ -4,8 +4,14 @@ use crate::exceptions::{BitboardError, PieceError};
 use crate::piece::PieceType;
 
 #[derive(Debug, Clone)]
+pub enum PlayerColor {
+    White,
+    Black,
+}
+
+#[derive(Debug, Clone)]
 pub struct Player {
-    pub color: bool, // true = white, false = black
+    pub color: PlayerColor,
     pub pieces: Bitboard,
     pub pawns: Bitboard,
     pub knights: Bitboard,
@@ -17,30 +23,57 @@ pub struct Player {
 
 impl Player {
 
-    pub fn new(color: bool) -> Player {
+    pub fn new(color: PlayerColor) -> Player {
 
         let mut pawns: Bitboard = Bitboard::new();
         for i in 0..BOARD_SIZE {
-            pawns.set_square(i + if color { 8 } else { 48 });
+            pawns.set_square(i + match color {
+                PlayerColor::White => 8,
+                PlayerColor::Black => 48,
+            });
         }
 
         let mut knights: Bitboard = Bitboard::new();
-        knights.set_square(1 + if color { 0 } else { 56 });
-        knights.set_square(6 + if color { 0 } else { 56 });
+        knights.set_square(1 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
+        knights.set_square(6 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
 
         let mut bishops: Bitboard = Bitboard::new();
-        bishops.set_square(2 + if color { 0 } else { 56 });
-        bishops.set_square(5 + if color { 0 } else { 56 });
+        bishops.set_square(2 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
+        bishops.set_square(5 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
 
         let mut rooks: Bitboard = Bitboard::new();
-        rooks.set_square(0 + if color { 0 } else { 56 });
-        rooks.set_square(7 + if color { 0 } else { 56 });
+        rooks.set_square(0 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
+        rooks.set_square(7 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
 
         let mut queen: Bitboard = Bitboard::new();
-        queen.set_square(3 + if color { 0 } else { 56 });
+        queen.set_square(3 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
 
         let mut king: Bitboard = Bitboard::new();
-        king.set_square(4 + if color { 0 } else { 56 });
+        king.set_square(4 + match color {
+            PlayerColor::White => 0,
+            PlayerColor::Black => 56,
+        });
 
         let mut pieces: Bitboard = Bitboard::new();
         pieces.set_board(
@@ -97,6 +130,7 @@ impl Player {
                 self.king.clear_square(from);
                 self.king.set_square(to);
             },
+            Ok(PieceType::None) => return Err(BitboardError::PieceNotFound),
             Err(_) => return Err(BitboardError::PieceNotFound),
         }
 
@@ -126,6 +160,7 @@ impl Player {
                 self.king.clear_square(to);
             },
             Err(_) => (),
+            _ => {}
         }
 
         Ok(())

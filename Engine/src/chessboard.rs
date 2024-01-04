@@ -1,10 +1,10 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
-use crate::exceptions::MoveError;
+use crate::exceptions::{MoveError, PieceError};
 use crate::piece::{check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked,
                    is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
                    is_queen_move_valid, is_rook_move_valid, PieceType};
-use crate::player::Player;
+use crate::player::{Player, PlayerColor};
 
 
 // Table orientation:
@@ -26,13 +26,11 @@ pub struct Chessboard {
     pub black: Player,
 }
 
-struct Piece(u64, u64, bool);
-
 impl Chessboard {
 
     pub fn new() -> Chessboard {
-        let white = Player::new(true);
-        let black = Player::new(false);
+        let white = Player::new(PlayerColor::White);
+        let black = Player::new(PlayerColor::Black);
 
         Chessboard {
             white,
@@ -56,11 +54,11 @@ impl Chessboard {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
 
-        println!("Before move: ");
-        Chessboard::print_board(self);
+        // println!("Before move: ");
+        // Chessboard::print_board(self);
 
-        println!("From: {}", from);
-        println!("To: {}", to);
+        // println!("From: {}", from);
+        // println!("To: {}", to);
 
         // Validation steps:
         // 1. Check if the piece is on the board
@@ -90,6 +88,7 @@ impl Chessboard {
             PieceType::Rook => is_rook_move_valid(from, to),
             PieceType::Queen => is_queen_move_valid(from, to),
             PieceType::King => is_king_move_valid(from, to),
+            PieceType::None => Err(PieceError::NoPiece),
         };
 
         if is_move_valid.is_err() {
@@ -140,7 +139,7 @@ impl Chessboard {
             self.black.make_move(from, to)
         };
 
-        println!("After move: ");
+        println!("Moved from {} to {}: ", from, to);
         Chessboard::print_board(self);
 
         if move_result.is_err() {
@@ -177,14 +176,45 @@ impl Chessboard {
         format!("{}{}", file, rank)
     }
 
-    fn print_board(&self) {
+    fn print_board(&mut self) {
         let board = self.get_board();
         let mut board = format!("{:064b}", board);
         board = board.chars().rev().collect::<String>();
         let mut board = board.chars();
-        for _ in 0..BOARD_SIZE {
-            for _ in 0..BOARD_SIZE {
-                print!("{} ", board.next().unwrap());
+        for i in 0..BOARD_SIZE {
+            for j in 0..BOARD_SIZE {
+
+                let square = board.next().unwrap();
+                if square == 0 as char {
+                    print!(". ");
+                    continue;
+                }
+
+                let index = i * BOARD_SIZE + j;
+                let piece = self.white.get_piece_type(index)
+                        .unwrap_or_else(|_| PieceType::None);
+
+                match piece {
+                    PieceType::Pawn => print!("♟ "),
+                    PieceType::Knight => print!("♞ "),
+                    PieceType::Bishop => print!("♝ "),
+                    PieceType::Rook => print!("♜ "),
+                    PieceType::Queen => print!("♛ "),
+                    PieceType::King => print!("♚ "),
+                    PieceType::None => {
+                        let piece = self.black.get_piece_type(index)
+                            .unwrap_or_else(|_| PieceType::None);
+                        match piece {
+                            PieceType::Pawn => print!("♙ "),
+                            PieceType::Knight => print!("♘ "),
+                            PieceType::Bishop => print!("♗ "),
+                            PieceType::Rook => print!("♖ "),
+                            PieceType::Queen => print!("♕ "),
+                            PieceType::King => print!("♔ "),
+                            PieceType::None => print!(". "),
+                        }
+                    }
+                }
             }
             println!();
         }
