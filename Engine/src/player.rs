@@ -3,7 +3,7 @@ use crate::constants::BOARD_SIZE;
 use crate::exceptions::{BitboardError, PieceError};
 use crate::piece::PieceType;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum PlayerColor {
     White,
     Black,
@@ -199,8 +199,26 @@ impl Player {
     }
 
     pub fn has_king_around(&self, position: u64) -> bool {
+        let mut valid_positions: u64 = 0;
+        let mid_position: i64 = position as i64;
+
+        for i in mid_position-1..=mid_position+1 {
+            if i < 0 || i >= BOARD_SIZE as i64 {
+                continue;
+            }
+
+            for j in mid_position-1..=mid_position+1 {
+                if j < 0 || j >= BOARD_SIZE as i64 {
+                    continue;
+                }
+
+                let index = i * BOARD_SIZE as i64 + j;
+                valid_positions |= 1 << index;
+            }
+        }
+
         let mut king = self.king.get_board();
-        king &= !(1 << position);
+        king &= valid_positions;
 
         let king_board = Bitboard::from(king);
         king_board.get_num_squares() > 0

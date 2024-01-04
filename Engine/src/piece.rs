@@ -1,7 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::PieceError;
-use crate::player::Player;
+use crate::player::{Player, PlayerColor};
 
 #[derive(PartialEq)]
 pub enum PieceType {
@@ -14,7 +14,7 @@ pub enum PieceType {
     None,
 }
 
-pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), PieceError> {
+pub fn is_pawn_move_valid(from: u64, to: u64, color: PlayerColor) -> Result<(), PieceError> {
 
     let result = basic_position_check(from, to);
     if result.is_err() {
@@ -23,10 +23,9 @@ pub fn is_pawn_move_valid(from: u64, to: u64, orientation: bool) -> Result<(), P
 
     let (from_rank, rank_diff, file_diff) = result.unwrap();
 
-    if orientation {
-        is_pawn_move_valid_for_white(from_rank, rank_diff, file_diff)
-    } else {
-        is_pawn_move_valid_for_black(from_rank, rank_diff, file_diff)
+    match color {
+        PlayerColor::White => is_pawn_move_valid_for_white(from_rank, rank_diff, file_diff),
+        PlayerColor::Black => is_pawn_move_valid_for_black(from_rank, rank_diff, file_diff),
     }
 }
 
@@ -165,7 +164,7 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
     let to_file = to % 8;
 
     if from_rank >= BOARD_SIZE || to_rank >= BOARD_SIZE {
-        return Err(PieceError::InvalidMove);
+        return Err(PieceError::OutOfBounds);
     }
 
     let to_rank: i64 = to_rank as i64;
@@ -176,13 +175,12 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
     Ok((from_rank, rank_diff, file_diff))
 }
 
-pub fn check_pawn_move_blocked(from: u64, to: u64, orientation: bool, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+pub fn check_pawn_move_blocked(from: u64, to: u64, color: PlayerColor, board: Bitboard, white_board: Player, black_board: Player) -> bool {
     let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
 
-    if orientation {
-        check_pawn_move_blocked_for_white(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
-    } else {
-        check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to)
+    match color {
+        PlayerColor::White => check_pawn_move_blocked_for_white(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to),
+        PlayerColor::Black => check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to),
     }
 }
 
@@ -243,16 +241,15 @@ fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: 
     false
 }
 
-pub fn is_king_move_blocked(to: u64, color: bool, board: u64, white_board: Player, black_board: Player) -> bool {
+pub fn is_king_move_blocked(to: u64, color: PlayerColor, board: u64, white_board: Player, black_board: Player) -> bool {
 
-    if color {
-        check_king_in_check(to, board, black_board, color)
-    } else {
-        check_king_in_check(to, board, white_board, color)
+    match color {
+        PlayerColor::White => check_king_in_check(to, board, black_board, color),
+        PlayerColor::Black => check_king_in_check(to, board, white_board, color),
     }
 }
 
-fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: bool) -> bool {
+fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: PlayerColor) -> bool {
 
     let mut opponent_pieces = opponent.pieces.get_board();
 
@@ -332,41 +329,51 @@ fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: bool)
     false
 }
 
-fn get_pawn_moves(pos: u64, color: bool) -> u64 {
+fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
 
     let mut moves = 0;
 
-    if color {
-        if pos < 56 {
-            moves |= 1 << (pos + 8);
-        }
-    } else {
-        if pos > 7 {
-            moves |= 1 << (pos - 8);
-        }
+    match color {
+        PlayerColor::White => {
+            if pos < 56 {
+                moves |= 1 << (pos + 8);
+            }
+        },
+        PlayerColor::Black => {
+            if pos > 7 {
+                moves |= 1 << (pos - 8);
+            }
+        },
     }
 
     if pos % 8 != 0 {
-        if color {
-            if pos < 56 {
-                moves |= 1 << (pos + 7);
-            }
-        } else {
-            if pos > 7 {
-                moves |= 1 << (pos - 9);
-            }
+
+        match color {
+            PlayerColor::White => {
+                if pos < 56 {
+                    moves |= 1 << (pos + 7);
+                }
+            },
+            PlayerColor::Black => {
+                if pos > 7 {
+                    moves |= 1 << (pos - 9);
+                }
+            },
         }
     }
 
     if pos % 8 != 7 {
-        if color {
-            if pos < 56 {
-                moves |= 1 << (pos + 9);
-            }
-        } else {
-            if pos > 7 {
-                moves |= 1 << (pos - 7);
-            }
+        match color {
+            PlayerColor::White => {
+                if pos < 56 {
+                    moves |= 1 << (pos + 9);
+                }
+            },
+            PlayerColor::Black => {
+                if pos > 7 {
+                    moves |= 1 << (pos - 7);
+                }
+            },
         }
     }
 
@@ -422,8 +429,10 @@ pub fn get_knight_moves(pos: u64) -> u64 {
 pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
     let mut moves = 0;
 
+    let pos: i64 = pos as i64;
+
     let mut i = pos + 9;
-    while i < NUM_SQUARES && i % 8 != 0 {
+    while i < NUM_SQUARES as i64 && i % 8 != 0 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -432,7 +441,7 @@ pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
     }
 
     i = pos + 7;
-    while i < NUM_SQUARES && i % 8 != 7 {
+    while i < NUM_SQUARES as i64 && i % 8 != 7 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -464,8 +473,10 @@ pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
 pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
     let mut moves = 0;
 
-    let mut i = pos + 8;
-    while i < NUM_SQUARES {
+    let pos: i64 = pos as i64;
+
+    let mut i: i64 = pos + 8 ;
+    while i < NUM_SQUARES as i64 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -483,7 +494,7 @@ pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
     }
 
     i = pos + 1;
-    while i < NUM_SQUARES && i % 8 != 0 {
+    while i < NUM_SQUARES as i64 && i % 8 != 0 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;

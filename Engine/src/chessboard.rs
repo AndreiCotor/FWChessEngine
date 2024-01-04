@@ -50,15 +50,9 @@ impl Chessboard {
         self.black.pieces.get_board()
     }
 
-    pub fn perform_move(&mut self, from: &str, to: &str, color: bool) -> Result<(), MoveError> {
+    pub fn perform_move(&mut self, from: &str, to: &str, color: PlayerColor) -> Result<(), MoveError> {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
-
-        // println!("Before move: ");
-        // Chessboard::print_board(self);
-
-        // println!("From: {}", from);
-        // println!("To: {}", to);
 
         // Validation steps:
         // 1. Check if the piece is on the board
@@ -68,10 +62,9 @@ impl Chessboard {
         // 5. Check if the move puts the king in check
 
         // 1, 2
-        let piece_type = if color {
-            self.white.get_piece_type(from)
-        } else {
-            self.black.get_piece_type(from)
+        let piece_type = match color {
+            PlayerColor::White => self.white.get_piece_type(from),
+            PlayerColor::Black => self.black.get_piece_type(from),
         };
 
         if piece_type.is_err() {
@@ -97,7 +90,7 @@ impl Chessboard {
 
         // 4, 5
         let is_move_blocked = match color {
-            true => match piece_type {
+            PlayerColor::White => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
                     self.white.has_piece_on(to)
@@ -112,7 +105,7 @@ impl Chessboard {
                 },
                 _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
             },
-            false => match piece_type {
+            PlayerColor::Black => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
                     self.black.has_piece_on(to)
@@ -130,31 +123,29 @@ impl Chessboard {
         };
 
         if is_move_blocked {
-            return Err(MoveError::SquareOccupied);
+            return Err(MoveError::InvalidMove);
         }
 
-        let move_result = if color {
-            self.white.make_move(from, to)
-        } else {
-            self.black.make_move(from, to)
+        let move_result = match color {
+            PlayerColor::White => self.white.make_move(from, to),
+            PlayerColor::Black => self.black.make_move(from, to),
         };
-
-        println!("Moved from {} to {}: ", from, to);
-        Chessboard::print_board(self);
 
         if move_result.is_err() {
             return Err(MoveError::InvalidMove);
         }
 
-        let capture_piece_if_exists = if color {
-            self.black.update_table_after_opponent_move(to)
-        } else {
-            self.white.update_table_after_opponent_move(to)
+        let capture_piece_if_exists = match color {
+            PlayerColor::White => self.black.update_table_after_opponent_move(to),
+            PlayerColor::Black => self.white.update_table_after_opponent_move(to),
         };
 
         if capture_piece_if_exists.is_err() {
             return Err(MoveError::InvalidMove);
         }
+
+        println!("Moved from {} to {}: ", from, to);
+        Chessboard::print_board(self);
 
         Ok(())
     }
