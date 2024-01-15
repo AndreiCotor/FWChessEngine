@@ -79,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn play_game_special_moves() {
+    fn test_special_moves() {
         println!("\n*******************\nRunning play_game_special_moves()\n*******************\n");
 
         let mut chessboard = Chessboard::new();
@@ -104,7 +104,6 @@ mod tests {
         assert_eq!(chessboard.perform_move("b4", "a3", PlayerColor::Black), Err(MoveError::InvalidMove));
         assert_eq!(chessboard.perform_move("b4", "c3", PlayerColor::Black), Err(MoveError::InvalidMove));
 
-        // extra
         assert_eq!(chessboard.perform_move("e7", "e5", PlayerColor::Black), Ok(()));
 
         // Test castling
@@ -115,6 +114,9 @@ mod tests {
         assert_eq!(chessboard.perform_move("f8", "e7", PlayerColor::Black), Ok(()));
 
         assert_eq!(chessboard.perform_move("e1", "g1", PlayerColor::White), Ok(()));
-        assert_eq!(chessboard.perform_move("e8", "g8", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("h8", "g8", PlayerColor::Black), Ok(()));
+        assert_eq!(chessboard.perform_move("g8", "h8", PlayerColor::Black), Ok(()));
+        assert_eq!(chessboard.perform_move("e8", "g8", PlayerColor::Black), Err(MoveError::InvalidMove));
     }
 }

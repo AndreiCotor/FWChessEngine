@@ -734,7 +734,7 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
     }
 
     if to == 58 {
-        if black_board.has_right_rook_moved {
+        if black_board.has_left_rook_moved {
             return false;
         }
 
@@ -754,7 +754,7 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
     } else {
-        if black_board.has_left_rook_moved {
+        if black_board.has_right_rook_moved {
             return false;
         }
 
