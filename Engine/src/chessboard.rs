@@ -220,7 +220,7 @@ impl Chessboard {
                         return Err(MoveError::InvalidMove);
                     }
                 } else {
-                    Err(MoveError::InvalidMove)
+                    return Err(MoveError::InvalidMove)
                 }
             },
             PlayerColor::Black => {
@@ -233,7 +233,7 @@ impl Chessboard {
                         return Err(MoveError::InvalidMove);
                     }
                 } else {
-                    Err(MoveError::InvalidMove)
+                    return Err(MoveError::InvalidMove)
                 }
             },
         }

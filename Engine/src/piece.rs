@@ -680,7 +680,7 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if !white_board.rooks.has_piece_on(0) || !board.is_square_empty(1) || !board.is_square_empty(2) || !board.is_square_empty(3) {
+        if white_board.rooks.is_square_empty(0) || !board.is_square_empty(1) || !board.is_square_empty(2) || !board.is_square_empty(3) {
             return false;
         }
 
@@ -700,7 +700,7 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if !white_board.rooks.has_piece_on(7) || !board.is_square_empty(5) || !board.is_square_empty(6) {
+        if white_board.rooks.is_square_empty(7) || !board.is_square_empty(5) || !board.is_square_empty(6) {
             return false;
         }
 
@@ -738,7 +738,7 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if !black_board.rooks.has_piece_on(56) || !board.is_square_empty(57) || !board.is_square_empty(58) || !board.is_square_empty(59) {
+        if black_board.rooks.is_square_empty(56) || !board.is_square_empty(57) || !board.is_square_empty(58) || !board.is_square_empty(59) {
             return false;
         }
 
@@ -758,7 +758,7 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if !black_board.rooks.has_piece_on(63) || !board.is_square_empty(61) || !board.is_square_empty(62) {
+        if black_board.rooks.is_square_empty(63) || !board.is_square_empty(61) || !board.is_square_empty(62) {
             return false;
         }
 
