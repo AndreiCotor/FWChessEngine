@@ -190,7 +190,12 @@ impl Player {
         Ok(())
     }
 
-    pub fn promote_pawn(&mut self, position: u64, piece_type: PieceType) -> Result<(), BitboardError> {
+    pub fn promote_pawn(&mut self, origin: u64, position: u64, piece_type: PieceType) -> Result<(), BitboardError> {
+        let move_res = self.make_move(origin, position);
+        if move_res.is_err() {
+            return Err(BitboardError::InvalidPromotion);
+        }
+
         match piece_type {
             PieceType::Pawn => return Err(BitboardError::InvalidPromotion),
             PieceType::King => return Err(BitboardError::InvalidPromotion),

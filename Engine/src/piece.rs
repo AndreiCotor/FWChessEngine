@@ -3,7 +3,7 @@ use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::PieceError;
 use crate::player::{Player, PlayerColor};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum PieceType {
     Pawn,
     Knight,
@@ -580,7 +580,7 @@ pub fn pawn_does_not_capture(to: u64, white_board: Player, black_board: Player) 
     !white_board.has_piece_on(to) && !black_board.has_piece_on(to)
 }
 
-pub fn check_pawn_does_en_passant_correctly(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+pub fn pawn_does_en_passant_correctly(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
     match color {
         PlayerColor::White => check_white_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
         PlayerColor::Black => check_black_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
@@ -793,3 +793,14 @@ pub fn is_big_castling(from: u64, to: u64, color: PlayerColor) -> bool {
 }
 
 // 3. promotion
+
+pub fn pawn_promotes(from: u64, to: u64, player_color: PlayerColor) -> bool {
+    match player_color {
+        PlayerColor::White => from/8 == 6 && to-from == BOARD_SIZE,
+        PlayerColor::Black => from/8 == 1 && from-to == BOARD_SIZE
+    }
+}
+
+pub fn pawn_promotes_correctly(to: u64, board: Bitboard) -> bool {
+    return board.is_square_empty(to);
+}

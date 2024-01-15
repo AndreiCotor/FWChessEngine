@@ -1,7 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{check_pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, PieceType};
+use crate::piece::{pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, pawn_promotes, PieceType, pawn_promotes_correctly};
 use crate::player::{Player, PlayerColor};
 
 
@@ -92,13 +92,35 @@ impl Chessboard {
         }
 
         // 4
-        // check if it is an en passant move
         if piece_type == PieceType::Pawn {
+            // check if it is an en passant move
             if pawn_moves_diagonally(from, to) &&
                 pawn_does_not_capture(to, self.white.clone(), self.black.clone()) {
 
-                return if check_pawn_does_en_passant_correctly(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
+                return if pawn_does_en_passant_correctly(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
                     self.perform_en_passant(from, to, color)
+                } else {
+                    Err(MoveError::InvalidMove)
+                }
+            }
+
+            // check if it is a promotion move
+            if pawn_promotes(from, to, color) {
+                return if pawn_promotes_correctly(to, Bitboard::from(self.get_board())) {
+                    // read the new piece from stdin
+                    let mut new_piece = String::new();
+                    println!("Enter the new piece: ");
+                    std::io::stdin().read_line(&mut new_piece).expect("Failed to read line");
+                    let new_piece = new_piece.trim();
+                    let new_piece = match new_piece {
+                        "queen" => PieceType::Queen,
+                        "rook" => PieceType::Rook,
+                        "bishop" => PieceType::Bishop,
+                        "knight" => PieceType::Knight,
+                        _ => return Err(MoveError::InvalidMove),
+                    };
+
+                    self.perform_promotion(from, to, color, new_piece)
                 } else {
                     Err(MoveError::InvalidMove)
                 }
@@ -117,7 +139,6 @@ impl Chessboard {
             }
         }
 
-        // check if it is a promotion move
         // check if the king is in check
 
 
@@ -239,6 +260,23 @@ impl Chessboard {
         }
 
         println!("Moved from {} to {} (castling): ", from, to);
+        Chessboard::print_board(self);
+
+        Ok(())
+    }
+
+    fn perform_promotion(&mut self, from: u64, to: u64, player_color: PlayerColor, new_piece: PieceType) -> Result<(), MoveError> {
+        let move_result = match player_color {
+            PlayerColor::White => self.white.promote_pawn(from, to, new_piece),
+            PlayerColor::Black => self.black.promote_pawn(from, to, new_piece),
+        };
+
+        if move_result.is_err() {
+            return Err(MoveError::InvalidMove);
+        }
+
+        println!("Moved from {} to {}: ", from, to);
+        println!("Promoted to {:?}: ", new_piece);
         Chessboard::print_board(self);
 
         Ok(())
