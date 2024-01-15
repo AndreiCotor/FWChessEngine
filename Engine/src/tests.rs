@@ -75,4 +75,9 @@ mod tests {
         assert_eq!(chessboard.perform_move("e6", "f5", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("f5", "g4", PlayerColor::Black), Err(MoveError::InvalidMove));
     }
+
+    #[test]
+    fn play_game_special_moves() {
+        let mut chessboard = Chessboard::new();
+    }
 }

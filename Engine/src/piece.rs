@@ -555,3 +555,68 @@ pub fn get_king_moves(pos: u64) -> u64 {
 
     moves
 }
+
+
+// special cases
+// 1. en passant
+pub fn check_pawn_does_en_passant(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+    match color {
+        PlayerColor::White => check_white_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
+        PlayerColor::Black => check_black_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
+    }
+}
+
+fn check_white_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+    if (from/8 != 4) || (to/8 != 5) {
+        return false;
+    }
+
+    if to-from != 7 && to-from != 9 {
+        return false;
+    }
+
+    if !white_pawn_board.has_piece_on(from) || !board.is_square_empty(to) {
+        return false;
+    }
+
+    if to-from == 7 {
+        if !black_pawn_board.has_piece_on(from-1) {
+            return false;
+        }
+    } else {
+        if !black_pawn_board.has_piece_on(from+1) {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+    if (from/8 != 3) || (to/8 != 2) {
+        return false;
+    }
+
+    if to-from != -7 && to-from != -9 {
+        return false;
+    }
+
+    if !black_pawn_board.has_piece_on(from) || !board.is_square_empty(to) {
+        return false;
+    }
+
+    if to-from == -7 {
+        if !white_pawn_board.has_piece_on(from+1) {
+            return false;
+        }
+    } else {
+        if !white_pawn_board.has_piece_on(from-1) {
+            return false;
+        }
+    }
+
+    true
+}
+
+// 2. castling
+// 3. promotion

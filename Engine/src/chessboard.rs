@@ -1,9 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked,
-                   is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
-                   is_queen_move_valid, is_rook_move_valid, PieceType};
+use crate::piece::{check_pawn_does_en_passant, check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, PieceType};
 use crate::player::{Player, PlayerColor};
 
 
@@ -58,8 +56,9 @@ impl Chessboard {
         // 1. Check if the piece is on the board
         // 2. Check if the piece is the correct color
         // 3. Check if the move is valid for the piece
-        // 4. Check if the move is blocked by another piece
-        // 5. Check if the move puts the king in check
+        // 4. Check if it is a special move
+        // 5. Check if the move is blocked by another piece
+        // 6. Check if the move puts the king in check
 
         // 1, 2
         let piece_type = match color {
@@ -88,7 +87,19 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        // 4, 5
+        // 4
+        // check if it is an en passant move
+        if piece_type == PieceType::Pawn {
+            if check_pawn_does_en_passant(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
+                return self.perform_en_passant(from, to, color);
+            }
+        }
+
+        // check if it is a castling move
+        // check if it is a promotion move
+
+
+        // 5, 6
         let is_move_blocked = match color {
             PlayerColor::White => match piece_type {
                 PieceType::Pawn => {
@@ -138,6 +149,31 @@ impl Chessboard {
         let capture_piece_if_exists = match color {
             PlayerColor::White => self.black.update_table_after_opponent_move(to),
             PlayerColor::Black => self.white.update_table_after_opponent_move(to),
+        };
+
+        if capture_piece_if_exists.is_err() {
+            return Err(MoveError::InvalidMove);
+        }
+
+        println!("Moved from {} to {}: ", from, to);
+        Chessboard::print_board(self);
+
+        Ok(())
+    }
+
+    fn perform_en_passant(&mut self, from: u64, to: u64, player_color: PlayerColor) -> Result<(), MoveError> {
+        let move_result = match player_color {
+            PlayerColor::White => self.white.make_move(from, to),
+            PlayerColor::Black => self.black.make_move(from, to),
+        };
+
+        if move_result.is_err() {
+            return Err(MoveError::InvalidMove);
+        }
+
+        let capture_piece_if_exists = match player_color {
+            PlayerColor::White => self.black.update_table_after_opponent_move(to - BOARD_SIZE),
+            PlayerColor::Black => self.white.update_table_after_opponent_move(to + BOARD_SIZE),
         };
 
         if capture_piece_if_exists.is_err() {

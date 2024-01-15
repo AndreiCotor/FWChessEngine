@@ -19,6 +19,8 @@ pub struct Player {
     pub rooks: Bitboard,
     pub queen: Bitboard,
     pub king: Bitboard,
+    pub have_rooks_moved: bool,
+    pub has_king_moved: bool,
 }
 
 impl Player {
@@ -94,6 +96,8 @@ impl Player {
             rooks,
             queen,
             king,
+            have_rooks_moved: false,
+            has_king_moved: false,
         }
     }
 
@@ -121,6 +125,7 @@ impl Player {
             Ok(PieceType::Rook) => {
                 self.rooks.clear_square(from);
                 self.rooks.set_square(to);
+                self.have_rooks_moved = true;
             },
             Ok(PieceType::Queen) => {
                 self.queen.clear_square(from);
@@ -129,6 +134,7 @@ impl Player {
             Ok(PieceType::King) => {
                 self.king.clear_square(from);
                 self.king.set_square(to);
+                self.has_king_moved = true;
             },
             Ok(PieceType::None) => return Err(BitboardError::PieceNotFound),
             Err(_) => return Err(BitboardError::PieceNotFound),
@@ -161,6 +167,32 @@ impl Player {
             },
             Err(_) => (),
             _ => {}
+        }
+
+        Ok(())
+    }
+
+    pub fn promote_pawn(&mut self, position: u64, piece_type: PieceType) -> Result<(), BitboardError> {
+        match piece_type {
+            PieceType::Pawn => return Err(BitboardError::InvalidPromotion),
+            PieceType::King => return Err(BitboardError::InvalidPromotion),
+            PieceType::Knight => {
+                self.pawns.clear_square(position);
+                self.knights.set_square(position);
+            },
+            PieceType::Bishop => {
+                self.pawns.clear_square(position);
+                self.bishops.set_square(position);
+            },
+            PieceType::Rook => {
+                self.pawns.clear_square(position);
+                self.rooks.set_square(position);
+            },
+            PieceType::Queen => {
+                self.pawns.clear_square(position);
+                self.queen.set_square(position);
+            },
+            PieceType::None => return Err(BitboardError::InvalidPromotion),
         }
 
         Ok(())
