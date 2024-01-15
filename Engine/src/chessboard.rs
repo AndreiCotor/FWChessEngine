@@ -313,7 +313,18 @@ impl Chessboard {
         let mut board = format!("{:064b}", board);
         board = board.chars().rev().collect::<String>();
         let mut board = board.chars();
+
+        // add letters and numbers
+        print!("  ");
         for i in 0..BOARD_SIZE {
+            print!("{} ", (i as u8 + 'a' as u8) as char);
+        }
+
+        println!();
+
+        for i in 0..BOARD_SIZE {
+            print!("{} ", i + 1);
+
             for j in 0..BOARD_SIZE {
 
                 let square = board.next().unwrap();
