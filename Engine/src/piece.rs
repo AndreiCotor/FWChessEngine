@@ -778,4 +778,18 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
     true
 }
 
+pub fn is_small_castling(from: u64, to: u64, color: PlayerColor) -> bool {
+    match color {
+        PlayerColor::White => from == 4 && to == 6,
+        PlayerColor::Black => from == 60 && to == 62,
+    }
+}
+
+pub fn is_big_castling(from: u64, to: u64, color: PlayerColor) -> bool {
+    match color {
+        PlayerColor::White => from == 4 && to == 2,
+        PlayerColor::Black => from == 60 && to == 58,
+    }
+}
+
 // 3. promotion

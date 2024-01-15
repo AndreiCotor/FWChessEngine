@@ -216,6 +216,53 @@ impl Player {
         Ok(())
     }
 
+    pub fn perform_small_castling(&mut self) -> Result<(), BitboardError> {
+        match self.color {
+            PlayerColor::White => {
+                if self.make_move(4, 6).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+                if self.make_move(7, 5).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+            },
+            PlayerColor::Black => {
+                if self.make_move(60, 62).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+                if self.make_move(63, 61).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+            },
+        }
+
+        Ok(())
+    }
+
+    pub fn perform_big_castling(&mut self) -> Result<(), BitboardError> {
+        match self.color {
+            PlayerColor::White => {
+                if self.make_move(4, 2).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+                if self.make_move(0, 3).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+            },
+            PlayerColor::Black => {
+                if self.make_move(60, 58).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+                if self.make_move(56, 59).is_err() {
+                    return Err(BitboardError::InvalidCastling);
+                }
+            },
+        }
+
+        Ok(())
+    }
+
+
     pub fn get_piece_type(&mut self, position: u64) -> Result<PieceType, PieceError> {
         if self.pawns.get_square(position) {
             return Ok(PieceType::Pawn);

@@ -6,6 +6,7 @@ pub enum BitboardError {
     SquareEmpty,
     PieceNotFound,
     InvalidPromotion,
+    InvalidCastling,
 }
 
 #[derive(Debug, PartialOrd, PartialEq)]

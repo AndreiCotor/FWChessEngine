@@ -1,7 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{check_pawn_does_en_passant_correctly, check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, pawn_does_not_capture, pawn_moves_diagonally, PieceType};
+use crate::piece::{check_pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, PieceType};
 use crate::player::{Player, PlayerColor};
 
 
@@ -106,6 +106,17 @@ impl Chessboard {
         }
 
         // check if it is a castling move
+        if piece_type == PieceType::King {
+            if is_a_castling_move(from, to, color) {
+
+                return if king_does_castling_correctly(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone()) {
+                    self.perform_castling(from, to, color)
+                } else {
+                    Err(MoveError::InvalidMove)
+                }
+            }
+        }
+
         // check if it is a promotion move
         // check if the king is in check
 
@@ -192,6 +203,42 @@ impl Chessboard {
         }
 
         println!("Moved from {} to {}: ", from, to);
+        Chessboard::print_board(self);
+
+        Ok(())
+    }
+
+    fn perform_castling(&mut self, from: u64, to: u64, player_color: PlayerColor) -> Result<(), MoveError> {
+        match player_color {
+            PlayerColor::White => {
+                if is_small_castling(from, to, PlayerColor::White) {
+                    if self.white.perform_small_castling().is_err() {
+                        return Err(MoveError::InvalidMove);
+                    }
+                } else if is_big_castling(from, to, PlayerColor::White) {
+                    if self.white.perform_big_castling().is_err() {
+                        return Err(MoveError::InvalidMove);
+                    }
+                } else {
+                    Err(MoveError::InvalidMove)
+                }
+            },
+            PlayerColor::Black => {
+                if is_small_castling(from, to, PlayerColor::Black) {
+                    if self.black.perform_small_castling().is_err() {
+                        return Err(MoveError::InvalidMove);
+                    }
+                } else if is_big_castling(from, to, PlayerColor::Black) {
+                    if self.black.perform_big_castling().is_err() {
+                        return Err(MoveError::InvalidMove);
+                    }
+                } else {
+                    Err(MoveError::InvalidMove)
+                }
+            },
+        }
+
+        println!("Moved from {} to {} (castling): ", from, to);
         Chessboard::print_board(self);
 
         Ok(())
