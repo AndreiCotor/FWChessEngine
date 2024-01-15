@@ -8,6 +8,8 @@ mod tests {
 
     #[test]
     fn test_chessboard_valid_moves() {
+        println!("\n*******************\nRunning test_chessboard_valid_moves()\n*******************\n");
+
         let mut chessboard = Chessboard::new();
 
         // Test white pawn moves
@@ -78,6 +80,28 @@ mod tests {
 
     #[test]
     fn play_game_special_moves() {
+        println!("\n*******************\nRunning play_game_special_moves()\n*******************\n");
+
         let mut chessboard = Chessboard::new();
+
+        // Test en passant
+        assert_eq!(chessboard.perform_move("e2", "e4", PlayerColor::White), Ok(()));
+        assert_eq!(chessboard.perform_move("d7", "d5", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("e4", "e5", PlayerColor::White), Ok(()));
+        assert_eq!(chessboard.perform_move("b7", "b6", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("e5", "d6", PlayerColor::White), Ok(()));
+
+        assert_eq!(chessboard.perform_move("b6", "c5", PlayerColor::Black), Err(MoveError::InvalidMove));
+        assert_eq!(chessboard.perform_move("b6", "b4", PlayerColor::Black), Err(MoveError::InvalidMove));
+        assert_eq!(chessboard.perform_move("b6", "b5", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("h2", "h4", PlayerColor::White), Ok(()));
+        assert_eq!(chessboard.perform_move("b5", "b4", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("h4", "h5", PlayerColor::White), Ok(()));
+        assert_eq!(chessboard.perform_move("b4", "a3", PlayerColor::Black), Err(MoveError::InvalidMove));
+        assert_eq!(chessboard.perform_move("b4", "c3", PlayerColor::Black), Err(MoveError::InvalidMove));
     }
 }

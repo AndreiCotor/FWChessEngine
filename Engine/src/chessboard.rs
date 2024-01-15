@@ -1,7 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{check_pawn_does_en_passant, check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, PieceType};
+use crate::piece::{check_pawn_does_en_passant_correctly, check_pawn_move_blocked, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, pawn_does_not_capture, pawn_moves_diagonally, PieceType};
 use crate::player::{Player, PlayerColor};
 
 
@@ -72,6 +72,10 @@ impl Chessboard {
 
         let piece_type = piece_type.unwrap();
 
+        if piece_type == PieceType::None {
+            return Err(MoveError::PieceNotFound);
+        }
+
         // 3
         let is_move_valid = match piece_type {
             PieceType::Pawn => is_pawn_move_valid(from, to, color),
@@ -90,8 +94,14 @@ impl Chessboard {
         // 4
         // check if it is an en passant move
         if piece_type == PieceType::Pawn {
-            if check_pawn_does_en_passant(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
-                return self.perform_en_passant(from, to, color);
+            if pawn_moves_diagonally(from, to) &&
+                pawn_does_not_capture(to, self.white.clone(), self.black.clone()) {
+
+                return if check_pawn_does_en_passant_correctly(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
+                    self.perform_en_passant(from, to, color)
+                } else {
+                    Err(MoveError::InvalidMove)
+                }
             }
         }
 

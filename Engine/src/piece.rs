@@ -559,7 +559,20 @@ pub fn get_king_moves(pos: u64) -> u64 {
 
 // special cases
 // 1. en passant
-pub fn check_pawn_does_en_passant(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+
+pub fn pawn_moves_diagonally(from: u64, to: u64) -> bool {
+    if from > to {
+        return from - to == 7 || from - to == 9;
+    }
+
+    return to - from == 7 || to - from == 9;
+}
+
+pub fn pawn_does_not_capture(to: u64, white_board: Player, black_board: Player) -> bool {
+    !white_board.has_piece_on(to) && !black_board.has_piece_on(to)
+}
+
+pub fn check_pawn_does_en_passant_correctly(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
     match color {
         PlayerColor::White => check_white_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
         PlayerColor::Black => check_black_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
@@ -597,7 +610,7 @@ fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
         return false;
     }
 
-    if to-from != -7 && to-from != -9 {
+    if from-to != 7 && from-to != 9 {
         return false;
     }
 
@@ -605,7 +618,7 @@ fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
         return false;
     }
 
-    if to-from == -7 {
+    if from-to == 7 {
         if !white_pawn_board.has_piece_on(from+1) {
             return false;
         }

@@ -223,7 +223,7 @@ impl Player {
             return Ok(PieceType::King);
         }
 
-        Err(PieceError::NoPiece)
+        Ok(PieceType::None)
     }
 
     pub fn has_piece_on(&self, position: u64) -> bool {
