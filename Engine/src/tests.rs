@@ -126,5 +126,18 @@ mod tests {
         assert_eq!(chessboard.perform_move("e4", "e3", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("e3", "e2", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("e2", "e1", PlayerColor::Black), Ok(()));
+
+        // Test check
+        assert_eq!(chessboard.perform_move("d1", "e2", PlayerColor::White), Ok(()));
+
+        assert_eq!(chessboard.perform_move("e7", "d6", PlayerColor::Black), Err(MoveError::InvalidMove));
+
+        assert_eq!(chessboard.perform_move("e2", "d1", PlayerColor::White), Ok(()));
+        assert_eq!(chessboard.perform_move("e7", "d6", PlayerColor::Black), Ok(()));
+
+        assert_eq!(chessboard.perform_move("d1", "e2", PlayerColor::White), Ok(()));
+
+        assert_eq!(chessboard.perform_move("d6", "c5", PlayerColor::Black), Err(MoveError::InvalidMove));
+        assert_eq!(chessboard.perform_move("d6", "e5", PlayerColor::Black), Ok(()));
     }
 }

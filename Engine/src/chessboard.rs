@@ -1,7 +1,7 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, pawn_promotes, PieceType, pawn_promotes_correctly};
+use crate::piece::{pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, pawn_promotes, PieceType, pawn_promotes_correctly, king_is_in_check};
 use crate::player::{Player, PlayerColor};
 
 
@@ -19,6 +19,7 @@ use crate::player::{Player, PlayerColor};
 // convention: true = white, false = black
 // white on bottom, black on top
 
+#[derive(Debug, Clone)]
 pub struct Chessboard {
     pub white: Player,
     pub black: Player,
@@ -141,9 +142,6 @@ impl Chessboard {
             }
         }
 
-        // check if the king is in check
-
-
         // 5, 6
         let is_move_blocked = match color {
             PlayerColor::White => match piece_type {
@@ -180,6 +178,15 @@ impl Chessboard {
 
         if is_move_blocked {
             return Err(MoveError::InvalidMove);
+        }
+
+        // 4 - check is king is in check
+        match king_is_in_check(self.clone(), from, to, color) {
+            Err(_) => return Err(MoveError::InvalidMove),
+            Ok(r) => match r {
+                true => return Err(MoveError::InvalidMove),
+                _ => ()
+            }
         }
 
         let move_result = match color {

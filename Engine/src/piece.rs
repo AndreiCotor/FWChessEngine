@@ -1,6 +1,7 @@
 use crate::bitboard::Bitboard;
+use crate::chessboard::Chessboard;
 use crate::constants::{BOARD_SIZE, NUM_SQUARES};
-use crate::exceptions::PieceError;
+use crate::exceptions::{MoveError, PieceError};
 use crate::player::{Player, PlayerColor};
 
 #[derive(PartialEq, Debug)]
@@ -804,3 +805,40 @@ pub fn pawn_promotes(from: u64, to: u64, player_color: PlayerColor) -> bool {
 pub fn pawn_promotes_correctly(to: u64, board: Bitboard) -> bool {
     return board.is_square_empty(to);
 }
+
+// 4. king is in check
+pub fn king_is_in_check(mut chessboard: Chessboard, from: u64, to: u64, color: PlayerColor) -> Result<bool, MoveError> {
+
+    let move_result = match color {
+        PlayerColor::White => chessboard.white.make_move(from, to),
+        PlayerColor::Black => chessboard.black.make_move(from, to),
+    };
+
+    if move_result.is_err() {
+        return Err(MoveError::InvalidMove);
+    }
+
+    let capture_piece_if_exists = match color {
+        PlayerColor::White => chessboard.black.update_table_after_opponent_move(to),
+        PlayerColor::Black => chessboard.white.update_table_after_opponent_move(to),
+    };
+
+    if capture_piece_if_exists.is_err() {
+        return Err(MoveError::InvalidMove);
+    }
+
+    match color {
+        PlayerColor::White => Ok(check_king_in_check(
+            chessboard.white.king.get_board().trailing_zeros() as u64,
+            chessboard.get_board(),
+            chessboard.black.clone(),
+            PlayerColor::Black)),
+
+        PlayerColor::Black => Ok(check_king_in_check(
+            chessboard.black.king.get_board().trailing_zeros() as u64,
+            chessboard.get_board(),
+            chessboard.white.clone(),
+            PlayerColor::White)),
+    }
+}
+
