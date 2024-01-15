@@ -1,7 +1,6 @@
 
 #[cfg(test)]
 mod tests {
-
     use crate::chessboard::Chessboard;
     use crate::exceptions::{MoveError};
     use crate::player::PlayerColor;
@@ -118,5 +117,16 @@ mod tests {
         assert_eq!(chessboard.perform_move("h8", "g8", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("g8", "h8", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("e8", "g8", PlayerColor::Black), Err(MoveError::InvalidMove));
+
+
+        // Test promotion
+        assert_eq!(chessboard.perform_move("e2", "d3", PlayerColor::White), Ok(()));
+
+        assert_eq!(chessboard.perform_move("e5", "e4", PlayerColor::Black), Ok(()));
+        assert_eq!(chessboard.perform_move("e4", "e3", PlayerColor::Black), Ok(()));
+        assert_eq!(chessboard.perform_move("e3", "e2", PlayerColor::Black), Ok(()));
+        assert_eq!(chessboard.perform_move("e2", "e1", PlayerColor::Black), Ok(()));
+
+        // write_to_stdin("queen").unwrap();
     }
 }

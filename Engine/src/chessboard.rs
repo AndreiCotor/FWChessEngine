@@ -108,17 +108,19 @@ impl Chessboard {
             if pawn_promotes(from, to, color) {
                 return if pawn_promotes_correctly(to, Bitboard::from(self.get_board())) {
                     // read the new piece from stdin
-                    let mut new_piece = String::new();
-                    println!("Enter the new piece: ");
-                    std::io::stdin().read_line(&mut new_piece).expect("Failed to read line");
-                    let new_piece = new_piece.trim();
-                    let new_piece = match new_piece {
-                        "queen" => PieceType::Queen,
-                        "rook" => PieceType::Rook,
-                        "bishop" => PieceType::Bishop,
-                        "knight" => PieceType::Knight,
-                        _ => return Err(MoveError::InvalidMove),
-                    };
+                    // let mut new_piece = String::new();
+                    // println!("Enter the new piece: ");
+                    // std::io::stdin().read_line(&mut new_piece).expect("Failed to read line");
+                    // let new_piece = new_piece.trim();
+                    // let new_piece = match new_piece {
+                    //     "queen" => PieceType::Queen,
+                    //     "rook" => PieceType::Rook,
+                    //     "bishop" => PieceType::Bishop,
+                    //     "knight" => PieceType::Knight,
+                    //     _ => return Err(MoveError::InvalidMove),
+                    // };
+
+                    let new_piece = PieceType::Queen; // TODO: remove this line, replace with custom piece
 
                     self.perform_promotion(from, to, color, new_piece)
                 } else {
@@ -276,7 +278,7 @@ impl Chessboard {
         }
 
         println!("Moved from {} to {}: ", from, to);
-        println!("Promoted to {:?}: ", new_piece);
+        // println!("Promoted to {:?}: ", new_piece);
         Chessboard::print_board(self);
 
         Ok(())
