@@ -126,7 +126,5 @@ mod tests {
         assert_eq!(chessboard.perform_move("e4", "e3", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("e3", "e2", PlayerColor::Black), Ok(()));
         assert_eq!(chessboard.perform_move("e2", "e1", PlayerColor::Black), Ok(()));
-
-        // write_to_stdin("queen").unwrap();
     }
 }
