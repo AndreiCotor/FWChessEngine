@@ -19,7 +19,8 @@ pub struct Player {
     pub rooks: Bitboard,
     pub queen: Bitboard,
     pub king: Bitboard,
-    pub have_rooks_moved: bool,
+    pub has_left_rook_moved: bool,
+    pub has_right_rook_moved: bool,
     pub has_king_moved: bool,
 }
 
@@ -96,7 +97,8 @@ impl Player {
             rooks,
             queen,
             king,
-            have_rooks_moved: false,
+            has_left_rook_moved: false,
+            has_right_rook_moved: false,
             has_king_moved: false,
         }
     }
@@ -125,7 +127,23 @@ impl Player {
             Ok(PieceType::Rook) => {
                 self.rooks.clear_square(from);
                 self.rooks.set_square(to);
-                self.have_rooks_moved = true;
+
+                match self.color {
+                    PlayerColor::White => {
+                        if from == 0 {
+                            self.has_left_rook_moved = true;
+                        } else if from == 7 {
+                            self.has_right_rook_moved = true;
+                        }
+                    },
+                    PlayerColor::Black => {
+                        if from == 56 {
+                            self.has_left_rook_moved = true;
+                        } else if from == 63 {
+                            self.has_right_rook_moved = true;
+                        }
+                    },
+                }
             },
             Ok(PieceType::Queen) => {
                 self.queen.clear_square(from);

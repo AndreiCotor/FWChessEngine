@@ -149,6 +149,14 @@ pub fn is_king_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
         return Ok(());
     }
 
+    if from == 4 && (to == 2 || to == 6) {
+        return Ok(()); // castling white
+    }
+
+    if from == 60 && (to == 58 || to == 62) {
+        return Ok(()); // castling black
+    }
+
     Err(PieceError::InvalidMove)
 }
 
@@ -249,7 +257,7 @@ pub fn is_king_move_blocked(to: u64, color: PlayerColor, board: u64, white_board
     }
 }
 
-fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: PlayerColor) -> bool {
+fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, opponent_color: PlayerColor) -> bool {
 
     let mut opponent_pieces = opponent.pieces.get_board();
 
@@ -278,7 +286,7 @@ fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, color: Playe
 
     for i in 0..NUM_SQUARES {
         if (opponent_pawns & (1 << i)) != 0 {
-            opponent_pawn_moves |= get_pawn_moves(i, color);
+            opponent_pawn_moves |= get_pawn_moves(i, opponent_color);
         }
 
         if (opponent_knights & (1 << i)) != 0 {
@@ -632,4 +640,142 @@ fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
 }
 
 // 2. castling
+pub fn is_a_castling_move(from: u64, to: u64, color: PlayerColor) -> bool {
+    match color {
+        PlayerColor::White => is_white_castling_move(from, to),
+        PlayerColor::Black => is_black_castling_move(from, to),
+    }
+}
+
+fn is_white_castling_move(from: u64, to: u64) -> bool {
+    return from == 4 && (to == 2 || to == 6);
+}
+
+fn is_black_castling_move(from: u64, to: u64) -> bool {
+    return from == 60 && (to == 58 || to == 62);
+}
+
+pub fn king_does_castling_correctly(from: u64, to: u64, color: PlayerColor, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+    match color {
+        PlayerColor::White => white_king_does_castling_correctly(from, to, board, white_board, black_board),
+        PlayerColor::Black => black_king_does_castling_correctly(from, to, board, white_board, black_board),
+    }
+}
+
+fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+    if from != 4 || (to != 2 && to != 6) {
+        return false;
+    }
+
+    if !white_board.has_piece_on(from) || !board.is_square_empty(to) {
+        return false;
+    }
+
+    if white_board.has_king_moved {
+        return false
+    }
+
+    if to == 2 {
+        if white_board.has_left_rook_moved {
+            return false;
+        }
+
+        if !white_board.rooks.has_piece_on(0) || !board.is_square_empty(1) || !board.is_square_empty(2) || !board.is_square_empty(3) {
+            return false;
+        }
+
+        if check_king_in_check(4, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+
+        if check_king_in_check(3, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+
+        if check_king_in_check(2, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+    } else {
+        if white_board.has_right_rook_moved {
+            return false;
+        }
+
+        if !white_board.rooks.has_piece_on(7) || !board.is_square_empty(5) || !board.is_square_empty(6) {
+            return false;
+        }
+
+        if check_king_in_check(4, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+
+        if check_king_in_check(5, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+
+        if check_king_in_check(6, board.get_board(), black_board.clone(), PlayerColor::Black) {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+    if from != 60 || (to != 58 && to != 62) {
+        return false;
+    }
+
+    if !black_board.has_piece_on(from) || !board.is_square_empty(to) {
+        return false;
+    }
+
+    if black_board.has_king_moved {
+        return false
+    }
+
+    if to == 58 {
+        if black_board.has_right_rook_moved {
+            return false;
+        }
+
+        if !black_board.rooks.has_piece_on(56) || !board.is_square_empty(57) || !board.is_square_empty(58) || !board.is_square_empty(59) {
+            return false;
+        }
+
+        if check_king_in_check(60, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+
+        if check_king_in_check(59, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+
+        if check_king_in_check(58, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+    } else {
+        if black_board.has_left_rook_moved {
+            return false;
+        }
+
+        if !black_board.rooks.has_piece_on(63) || !board.is_square_empty(61) || !board.is_square_empty(62) {
+            return false;
+        }
+
+        if check_king_in_check(60, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+
+        if check_king_in_check(61, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+
+        if check_king_in_check(62, board.get_board(), white_board.clone(), PlayerColor::White) {
+            return false;
+        }
+    }
+
+    true
+}
+
 // 3. promotion

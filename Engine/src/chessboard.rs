@@ -107,6 +107,7 @@ impl Chessboard {
 
         // check if it is a castling move
         // check if it is a promotion move
+        // check if the king is in check
 
 
         // 5, 6
