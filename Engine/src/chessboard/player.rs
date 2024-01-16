@@ -1,7 +1,7 @@
-use crate::bitboard::Bitboard;
+use crate::chessboard::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{BitboardError, PieceError};
-use crate::piece::PieceType;
+use crate::chessboard::piece::PieceType;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PlayerColor {
@@ -66,7 +66,7 @@ impl Player {
 
         let mut rooks: Bitboard = Bitboard::new();
         rooks.set_square(
-            0 + match color {
+            match color {
                 PlayerColor::White => 0,
                 PlayerColor::Black => 56,
             },

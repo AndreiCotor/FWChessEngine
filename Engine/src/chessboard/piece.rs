@@ -1,8 +1,8 @@
-use crate::bitboard::Bitboard;
-use crate::chessboard::Chessboard;
+use crate::chessboard::bitboard::Bitboard;
+use crate::chessboard::chessboard::Chessboard;
 use crate::constants::{BOARD_SIZE, NUM_SQUARES};
 use crate::exceptions::{MoveError, PieceError};
-use crate::player::{Player, PlayerColor};
+use crate::chessboard::player::{Player, PlayerColor};
 
 #[derive(PartialEq, Debug)]
 pub enum PieceType {
@@ -641,7 +641,7 @@ pub fn pawn_moves_diagonally(from: u64, to: u64) -> bool {
         return from - to == 7 || from - to == 9;
     }
 
-    return to - from == 7 || to - from == 9;
+    to - from == 7 || to - from == 9
 }
 
 pub fn pawn_does_not_capture(to: u64, white_board: Player, black_board: Player) -> bool {
@@ -689,10 +689,8 @@ fn check_white_pawn_does_en_passant(
         if !black_pawn_board.has_piece_on(from - 1) {
             return false;
         }
-    } else {
-        if !black_pawn_board.has_piece_on(from + 1) {
-            return false;
-        }
+    } else if !black_pawn_board.has_piece_on(from + 1) {
+        return false;
     }
 
     true
@@ -721,10 +719,8 @@ fn check_black_pawn_does_en_passant(
         if !white_pawn_board.has_piece_on(from + 1) {
             return false;
         }
-    } else {
-        if !white_pawn_board.has_piece_on(from - 1) {
-            return false;
-        }
+    } else if !white_pawn_board.has_piece_on(from - 1) {
+        return false;
     }
 
     true
@@ -739,11 +735,11 @@ pub fn is_a_castling_move(from: u64, to: u64, color: PlayerColor) -> bool {
 }
 
 fn is_white_castling_move(from: u64, to: u64) -> bool {
-    return from == 4 && (to == 2 || to == 6);
+    from == 4 && (to == 2 || to == 6)
 }
 
 fn is_black_castling_move(from: u64, to: u64) -> bool {
-    return from == 60 && (to == 58 || to == 62);
+    from == 60 && (to == 58 || to == 62)
 }
 
 pub fn king_does_castling_correctly(
@@ -817,7 +813,7 @@ fn white_king_does_castling_correctly(
         if check_king_in_check(
             2,
             board.get_board(),
-            black_board.clone(),
+            black_board,
             PlayerColor::Black,
         ) {
             return false;
@@ -855,7 +851,7 @@ fn white_king_does_castling_correctly(
         if check_king_in_check(
             6,
             board.get_board(),
-            black_board.clone(),
+            black_board,
             PlayerColor::Black,
         ) {
             return false;
@@ -918,7 +914,7 @@ fn black_king_does_castling_correctly(
         if check_king_in_check(
             58,
             board.get_board(),
-            white_board.clone(),
+            white_board,
             PlayerColor::White,
         ) {
             return false;
@@ -956,7 +952,7 @@ fn black_king_does_castling_correctly(
         if check_king_in_check(
             62,
             board.get_board(),
-            white_board.clone(),
+            white_board,
             PlayerColor::White,
         ) {
             return false;
@@ -990,7 +986,7 @@ pub fn pawn_promotes(from: u64, to: u64, player_color: PlayerColor) -> bool {
 }
 
 pub fn pawn_promotes_correctly(to: u64, board: Bitboard) -> bool {
-    return board.is_square_empty(to);
+    board.is_square_empty(to)
 }
 
 // 4. king is in check

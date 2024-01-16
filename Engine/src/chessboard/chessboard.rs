@@ -1,14 +1,14 @@
-use crate::bitboard::Bitboard;
+use crate::chessboard::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{
+use crate::chessboard::piece::{
     check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid,
     is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
     is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly,
     king_is_in_check, pawn_does_en_passant_correctly, pawn_does_not_capture, pawn_moves_diagonally,
     pawn_promotes, pawn_promotes_correctly, PieceType,
 };
-use crate::player::{Player, PlayerColor};
+use crate::chessboard::player::{Player, PlayerColor};
 
 // Table orientation:
 //   a b c d e f g h
@@ -144,21 +144,19 @@ impl Chessboard {
         }
 
         // check if it is a castling move
-        if piece_type == PieceType::King {
-            if is_a_castling_move(from, to, color) {
-                return if king_does_castling_correctly(
-                    from,
-                    to,
-                    color,
-                    Bitboard::from(self.get_board()),
-                    self.white.clone(),
-                    self.black.clone(),
-                ) {
-                    self.perform_castling(from, to, color)
-                } else {
-                    Err(MoveError::InvalidMove)
-                };
-            }
+        if piece_type == PieceType::King && is_a_castling_move(from, to, color) {
+            return if king_does_castling_correctly(
+                from,
+                to,
+                color,
+                Bitboard::from(self.get_board()),
+                self.white.clone(),
+                self.black.clone(),
+            ) {
+                self.perform_castling(from, to, color)
+            } else {
+                Err(MoveError::InvalidMove)
+            };
         }
 
         // 5, 6
@@ -370,8 +368,8 @@ impl Chessboard {
     fn convert_index_to_square(index: u64) -> String {
         let file = index % BOARD_SIZE;
         let rank = index / BOARD_SIZE;
-        let file = (file as u8 + 'a' as u8) as char;
-        let rank = (rank as u8 + '1' as u8) as char;
+        let file = (file as u8 + b'a') as char;
+        let rank = (rank as u8 + b'1') as char;
         format!("{}{}", file, rank)
     }
 
@@ -384,7 +382,7 @@ impl Chessboard {
         // add letters and numbers
         print!("  ");
         for i in 0..BOARD_SIZE {
-            print!("{} ", (i as u8 + 'a' as u8) as char);
+            print!("{} ", (i as u8 + b'a') as char);
         }
 
         println!();
@@ -403,7 +401,7 @@ impl Chessboard {
                 let piece = self
                     .white
                     .get_piece_type(index)
-                    .unwrap_or_else(|_| PieceType::None);
+                    .unwrap_or(PieceType::None);
 
                 match piece {
                     PieceType::Pawn => print!("♟ "),
@@ -416,7 +414,7 @@ impl Chessboard {
                         let piece = self
                             .black
                             .get_piece_type(index)
-                            .unwrap_or_else(|_| PieceType::None);
+                            .unwrap_or(PieceType::None);
                         match piece {
                             PieceType::Pawn => print!("♙ "),
                             PieceType::Knight => print!("♘ "),

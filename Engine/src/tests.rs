@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::chessboard::Chessboard;
+    use crate::chessboard::chessboard::Chessboard;
     use crate::exceptions::MoveError;
-    use crate::player::PlayerColor;
+    use crate::chessboard::player::PlayerColor;
 
     #[test]
     fn test_chessboard_valid_moves() {
