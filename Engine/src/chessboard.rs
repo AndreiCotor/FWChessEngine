@@ -1,9 +1,14 @@
 use crate::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::piece::{pawn_does_en_passant_correctly, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, pawn_does_not_capture, pawn_moves_diagonally, pawn_promotes, PieceType, pawn_promotes_correctly, king_is_in_check};
+use crate::piece::{
+    check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid,
+    is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
+    is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly,
+    king_is_in_check, pawn_does_en_passant_correctly, pawn_does_not_capture, pawn_moves_diagonally,
+    pawn_promotes, pawn_promotes_correctly, PieceType,
+};
 use crate::player::{Player, PlayerColor};
-
 
 // Table orientation:
 //   a b c d e f g h
@@ -26,15 +31,11 @@ pub struct Chessboard {
 }
 
 impl Chessboard {
-
     pub fn new() -> Chessboard {
         let white = Player::new(PlayerColor::White);
         let black = Player::new(PlayerColor::Black);
 
-        Chessboard {
-            white,
-            black,
-        }
+        Chessboard { white, black }
     }
 
     pub fn get_board(&self) -> u64 {
@@ -49,7 +50,12 @@ impl Chessboard {
         self.black.pieces.get_board()
     }
 
-    pub fn perform_move(&mut self, from: &str, to: &str, color: PlayerColor) -> Result<(), MoveError> {
+    pub fn perform_move(
+        &mut self,
+        from: &str,
+        to: &str,
+        color: PlayerColor,
+    ) -> Result<(), MoveError> {
         let from = Chessboard::convert_square_to_index(from);
         let to = Chessboard::convert_square_to_index(to);
 
@@ -68,7 +74,7 @@ impl Chessboard {
         };
 
         if piece_type.is_err() {
-             return Err(MoveError::PieceNotFound);
+            return Err(MoveError::PieceNotFound);
         }
 
         let piece_type = piece_type.unwrap();
@@ -95,14 +101,21 @@ impl Chessboard {
         // 4
         if piece_type == PieceType::Pawn {
             // check if it is an en passant move
-            if pawn_moves_diagonally(from, to) &&
-                pawn_does_not_capture(to, self.white.clone(), self.black.clone()) {
-
-                return if pawn_does_en_passant_correctly(from, to, color, self.white.clone(), self.black.clone(), Bitboard::from(self.get_board())) {
+            if pawn_moves_diagonally(from, to)
+                && pawn_does_not_capture(to, self.white.clone(), self.black.clone())
+            {
+                return if pawn_does_en_passant_correctly(
+                    from,
+                    to,
+                    color,
+                    self.white.clone(),
+                    self.black.clone(),
+                    Bitboard::from(self.get_board()),
+                ) {
                     self.perform_en_passant(from, to, color)
                 } else {
                     Err(MoveError::InvalidMove)
-                }
+                };
             }
 
             // check if it is a promotion move
@@ -126,19 +139,25 @@ impl Chessboard {
                     self.perform_promotion(from, to, color, new_piece)
                 } else {
                     Err(MoveError::InvalidMove)
-                }
+                };
             }
         }
 
         // check if it is a castling move
         if piece_type == PieceType::King {
             if is_a_castling_move(from, to, color) {
-
-                return if king_does_castling_correctly(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone()) {
+                return if king_does_castling_correctly(
+                    from,
+                    to,
+                    color,
+                    Bitboard::from(self.get_board()),
+                    self.white.clone(),
+                    self.black.clone(),
+                ) {
                     self.perform_castling(from, to, color)
                 } else {
                     Err(MoveError::InvalidMove)
-                }
+                };
             }
         }
 
@@ -149,31 +168,63 @@ impl Chessboard {
                     // account for en passant and promotion and capture
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
-                        || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
-                },
+                        || check_pawn_move_blocked(
+                            from,
+                            to,
+                            color,
+                            Bitboard::from(self.get_board()),
+                            self.white.clone(),
+                            self.black.clone(),
+                        )
+                }
                 PieceType::King => {
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
                         || self.black.has_king_around(to)
-                        || is_king_move_blocked(to, color, self.get_board(), self.white.clone(), self.black.clone())
-                },
-                _ => self.white.has_piece_on(to) || self.black.get_piece_type(to) == Ok(PieceType::King),
+                        || is_king_move_blocked(
+                            to,
+                            color,
+                            self.get_board(),
+                            self.white.clone(),
+                            self.black.clone(),
+                        )
+                }
+                _ => {
+                    self.white.has_piece_on(to)
+                        || self.black.get_piece_type(to) == Ok(PieceType::King)
+                }
             },
             PlayerColor::Black => match piece_type {
                 PieceType::Pawn => {
                     // account for en passant and promotion and capture
                     self.black.has_piece_on(to)
                         || self.white.get_piece_type(to) == Ok(PieceType::King)
-                        || check_pawn_move_blocked(from, to, color, Bitboard::from(self.get_board()), self.white.clone(), self.black.clone())
-                },
+                        || check_pawn_move_blocked(
+                            from,
+                            to,
+                            color,
+                            Bitboard::from(self.get_board()),
+                            self.white.clone(),
+                            self.black.clone(),
+                        )
+                }
                 PieceType::King => {
                     self.black.has_piece_on(to)
                         || self.white.get_piece_type(to) == Ok(PieceType::King)
                         || self.white.has_king_around(to)
-                        || is_king_move_blocked(to, color, self.get_board(), self.white.clone(), self.black.clone())
-                },
-                _ => self.black.has_piece_on(to) || self.white.get_piece_type(to) == Ok(PieceType::King),
-            }
+                        || is_king_move_blocked(
+                            to,
+                            color,
+                            self.get_board(),
+                            self.white.clone(),
+                            self.black.clone(),
+                        )
+                }
+                _ => {
+                    self.black.has_piece_on(to)
+                        || self.white.get_piece_type(to) == Ok(PieceType::King)
+                }
+            },
         };
 
         if is_move_blocked {
@@ -185,8 +236,8 @@ impl Chessboard {
             Err(_) => return Err(MoveError::InvalidMove),
             Ok(r) => match r {
                 true => return Err(MoveError::InvalidMove),
-                _ => ()
-            }
+                _ => (),
+            },
         }
 
         let move_result = match color {
@@ -213,7 +264,12 @@ impl Chessboard {
         Ok(())
     }
 
-    fn perform_en_passant(&mut self, from: u64, to: u64, player_color: PlayerColor) -> Result<(), MoveError> {
+    fn perform_en_passant(
+        &mut self,
+        from: u64,
+        to: u64,
+        player_color: PlayerColor,
+    ) -> Result<(), MoveError> {
         let move_result = match player_color {
             PlayerColor::White => self.white.make_move(from, to),
             PlayerColor::Black => self.black.make_move(from, to),
@@ -238,7 +294,12 @@ impl Chessboard {
         Ok(())
     }
 
-    fn perform_castling(&mut self, from: u64, to: u64, player_color: PlayerColor) -> Result<(), MoveError> {
+    fn perform_castling(
+        &mut self,
+        from: u64,
+        to: u64,
+        player_color: PlayerColor,
+    ) -> Result<(), MoveError> {
         match player_color {
             PlayerColor::White => {
                 if is_small_castling(from, to, PlayerColor::White) {
@@ -250,9 +311,9 @@ impl Chessboard {
                         return Err(MoveError::InvalidMove);
                     }
                 } else {
-                    return Err(MoveError::InvalidMove)
+                    return Err(MoveError::InvalidMove);
                 }
-            },
+            }
             PlayerColor::Black => {
                 if is_small_castling(from, to, PlayerColor::Black) {
                     if self.black.perform_small_castling().is_err() {
@@ -263,9 +324,9 @@ impl Chessboard {
                         return Err(MoveError::InvalidMove);
                     }
                 } else {
-                    return Err(MoveError::InvalidMove)
+                    return Err(MoveError::InvalidMove);
                 }
-            },
+            }
         }
 
         println!("Moved from {} to {} (castling): ", from, to);
@@ -274,7 +335,13 @@ impl Chessboard {
         Ok(())
     }
 
-    fn perform_promotion(&mut self, from: u64, to: u64, player_color: PlayerColor, new_piece: PieceType) -> Result<(), MoveError> {
+    fn perform_promotion(
+        &mut self,
+        from: u64,
+        to: u64,
+        player_color: PlayerColor,
+        new_piece: PieceType,
+    ) -> Result<(), MoveError> {
         let move_result = match player_color {
             PlayerColor::White => self.white.promote_pawn(from, to, new_piece),
             PlayerColor::Black => self.black.promote_pawn(from, to, new_piece),
@@ -326,7 +393,6 @@ impl Chessboard {
             print!("{} ", i + 1);
 
             for j in 0..BOARD_SIZE {
-
                 let square = board.next().unwrap();
                 if square == 0 as char {
                     print!(". ");
@@ -334,8 +400,10 @@ impl Chessboard {
                 }
 
                 let index = i * BOARD_SIZE + j;
-                let piece = self.white.get_piece_type(index)
-                        .unwrap_or_else(|_| PieceType::None);
+                let piece = self
+                    .white
+                    .get_piece_type(index)
+                    .unwrap_or_else(|_| PieceType::None);
 
                 match piece {
                     PieceType::Pawn => print!("♟ "),
@@ -345,7 +413,9 @@ impl Chessboard {
                     PieceType::Queen => print!("♛ "),
                     PieceType::King => print!("♚ "),
                     PieceType::None => {
-                        let piece = self.black.get_piece_type(index)
+                        let piece = self
+                            .black
+                            .get_piece_type(index)
                             .unwrap_or_else(|_| PieceType::None);
                         match piece {
                             PieceType::Pawn => print!("♙ "),

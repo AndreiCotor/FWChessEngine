@@ -16,7 +16,6 @@ pub enum PieceType {
 }
 
 pub fn is_pawn_move_valid(from: u64, to: u64, color: PlayerColor) -> Result<(), PieceError> {
-
     let result = basic_position_check(from, to);
     if result.is_err() {
         return Err(result.unwrap_err());
@@ -30,7 +29,11 @@ pub fn is_pawn_move_valid(from: u64, to: u64, color: PlayerColor) -> Result<(), 
     }
 }
 
-fn is_pawn_move_valid_for_white(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_white(
+    from_rank: u64,
+    rank_diff: i64,
+    file_diff: i64,
+) -> Result<(), PieceError> {
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
         return Ok(());
     }
@@ -50,7 +53,11 @@ fn is_pawn_move_valid_for_white(from_rank: u64, rank_diff: i64, file_diff: i64) 
     Err(PieceError::InvalidMove)
 }
 
-fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) -> Result<(), PieceError> {
+fn is_pawn_move_valid_for_black(
+    from_rank: u64,
+    rank_diff: i64,
+    file_diff: i64,
+) -> Result<(), PieceError> {
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
         return Ok(());
     }
@@ -70,7 +77,6 @@ fn is_pawn_move_valid_for_black(from_rank: u64, rank_diff: i64, file_diff: i64) 
     Err(PieceError::InvalidMove)
 }
 
-
 pub fn is_knight_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     let result = basic_position_check(from, to);
     if result.is_err() {
@@ -86,7 +92,8 @@ pub fn is_knight_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
         || (rank_diff == 1 && file_diff == 2)
         || (rank_diff == 1 && file_diff == -2)
         || (rank_diff == -1 && file_diff == 2)
-        || (rank_diff == -1 && file_diff == -2) {
+        || (rank_diff == -1 && file_diff == -2)
+    {
         return Ok(());
     }
 
@@ -184,16 +191,50 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
     Ok((from_rank, rank_diff, file_diff))
 }
 
-pub fn check_pawn_move_blocked(from: u64, to: u64, color: PlayerColor, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+pub fn check_pawn_move_blocked(
+    from: u64,
+    to: u64,
+    color: PlayerColor,
+    board: Bitboard,
+    white_board: Player,
+    black_board: Player,
+) -> bool {
     let (from_rank, rank_diff, file_diff) = basic_position_check(from, to).unwrap();
 
     match color {
-        PlayerColor::White => check_pawn_move_blocked_for_white(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to),
-        PlayerColor::Black => check_pawn_move_blocked_for_black(from_rank, rank_diff, file_diff, board, white_board, black_board, from, to),
+        PlayerColor::White => check_pawn_move_blocked_for_white(
+            from_rank,
+            rank_diff,
+            file_diff,
+            board,
+            white_board,
+            black_board,
+            from,
+            to,
+        ),
+        PlayerColor::Black => check_pawn_move_blocked_for_black(
+            from_rank,
+            rank_diff,
+            file_diff,
+            board,
+            white_board,
+            black_board,
+            from,
+            to,
+        ),
     }
 }
 
-fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, white_board: Player, mut black_board: Player, from: u64, to: u64) -> bool {
+fn check_pawn_move_blocked_for_white(
+    from_rank: u64,
+    rank_diff: i64,
+    file_diff: i64,
+    board: Bitboard,
+    white_board: Player,
+    mut black_board: Player,
+    from: u64,
+    to: u64,
+) -> bool {
     //  account for en passant and promotion and capture
 
     if white_board.has_piece_on(to) {
@@ -202,7 +243,7 @@ fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: 
 
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
         return !board.is_square_empty(from + BOARD_SIZE)
-            || !board.is_square_empty(from + 2*BOARD_SIZE);
+            || !board.is_square_empty(from + 2 * BOARD_SIZE);
     }
 
     if rank_diff == 1 && file_diff == 0 {
@@ -210,27 +251,41 @@ fn check_pawn_move_blocked_for_white(from_rank: u64, rank_diff: i64, file_diff: 
     }
 
     if rank_diff == 1 && file_diff == 1 {
-        return !white_board.pawns.is_square_empty(from + 9) ||
-            black_board.get_piece_type(from + 9).unwrap().eq(&PieceType::King);
+        return !white_board.pawns.is_square_empty(from + 9)
+            || black_board
+                .get_piece_type(from + 9)
+                .unwrap()
+                .eq(&PieceType::King);
     }
 
     if rank_diff == 1 && file_diff == -1 {
         return !white_board.pawns.is_square_empty(from + 7)
-            || black_board.get_piece_type(from + 7).unwrap().eq(&PieceType::King);
+            || black_board
+                .get_piece_type(from + 7)
+                .unwrap()
+                .eq(&PieceType::King);
     }
 
     false
 }
 
-fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: i64, board: Bitboard, mut white_board: Player, black_board: Player, from: u64, to: u64) -> bool {
-
+fn check_pawn_move_blocked_for_black(
+    from_rank: u64,
+    rank_diff: i64,
+    file_diff: i64,
+    board: Bitboard,
+    mut white_board: Player,
+    black_board: Player,
+    from: u64,
+    to: u64,
+) -> bool {
     if black_board.has_piece_on(to) {
         return true;
     }
 
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
         return !board.is_square_empty(from - BOARD_SIZE)
-            || !board.is_square_empty(from - 2*BOARD_SIZE);
+            || !board.is_square_empty(from - 2 * BOARD_SIZE);
     }
 
     if rank_diff == -1 && file_diff == 0 {
@@ -239,27 +294,42 @@ fn check_pawn_move_blocked_for_black(from_rank: u64, rank_diff: i64, file_diff: 
 
     if rank_diff == -1 && file_diff == 1 {
         return !black_board.pawns.is_square_empty(from - 7)
-            || white_board.get_piece_type(from - 7).unwrap().eq(&PieceType::King);
+            || white_board
+                .get_piece_type(from - 7)
+                .unwrap()
+                .eq(&PieceType::King);
     }
 
     if rank_diff == -1 && file_diff == -1 {
         return !black_board.pawns.is_square_empty(from - 9)
-            || white_board.get_piece_type(from - 9).unwrap().eq(&PieceType::King);
+            || white_board
+                .get_piece_type(from - 9)
+                .unwrap()
+                .eq(&PieceType::King);
     }
 
     false
 }
 
-pub fn is_king_move_blocked(to: u64, color: PlayerColor, board: u64, white_board: Player, black_board: Player) -> bool {
-
+pub fn is_king_move_blocked(
+    to: u64,
+    color: PlayerColor,
+    board: u64,
+    white_board: Player,
+    black_board: Player,
+) -> bool {
     match color {
         PlayerColor::White => check_king_in_check(to, board, black_board, color),
         PlayerColor::Black => check_king_in_check(to, board, white_board, color),
     }
 }
 
-fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, opponent_color: PlayerColor) -> bool {
-
+fn check_king_in_check(
+    king_pos: u64,
+    board: u64,
+    opponent: Player,
+    opponent_color: PlayerColor,
+) -> bool {
     let mut opponent_pieces = opponent.pieces.get_board();
 
     let mut opponent_pawns = opponent.pawns.get_board();
@@ -339,7 +409,6 @@ fn check_king_in_check(king_pos: u64, board: u64, opponent: Player, opponent_col
 }
 
 fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
-
     let mut moves = 0;
 
     match color {
@@ -347,27 +416,26 @@ fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
             if pos < 56 {
                 moves |= 1 << (pos + 8);
             }
-        },
+        }
         PlayerColor::Black => {
             if pos > 7 {
                 moves |= 1 << (pos - 8);
             }
-        },
+        }
     }
 
     if pos % 8 != 0 {
-
         match color {
             PlayerColor::White => {
                 if pos < 56 {
                     moves |= 1 << (pos + 7);
                 }
-            },
+            }
             PlayerColor::Black => {
                 if pos > 7 {
                     moves |= 1 << (pos - 9);
                 }
-            },
+            }
         }
     }
 
@@ -377,12 +445,12 @@ fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
                 if pos < 56 {
                     moves |= 1 << (pos + 9);
                 }
-            },
+            }
             PlayerColor::Black => {
                 if pos > 7 {
                     moves |= 1 << (pos - 7);
                 }
-            },
+            }
         }
     }
 
@@ -484,7 +552,7 @@ pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
 
     let pos: i64 = pos as i64;
 
-    let mut i: i64 = pos + 8 ;
+    let mut i: i64 = pos + 8;
     while i < NUM_SQUARES as i64 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
@@ -565,7 +633,6 @@ pub fn get_king_moves(pos: u64) -> u64 {
     moves
 }
 
-
 // special cases
 // 1. en passant
 
@@ -581,19 +648,36 @@ pub fn pawn_does_not_capture(to: u64, white_board: Player, black_board: Player) 
     !white_board.has_piece_on(to) && !black_board.has_piece_on(to)
 }
 
-pub fn pawn_does_en_passant_correctly(from: u64, to: u64, color: PlayerColor, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
+pub fn pawn_does_en_passant_correctly(
+    from: u64,
+    to: u64,
+    color: PlayerColor,
+    white_pawn_board: Player,
+    black_pawn_board: Player,
+    board: Bitboard,
+) -> bool {
     match color {
-        PlayerColor::White => check_white_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
-        PlayerColor::Black => check_black_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board),
+        PlayerColor::White => {
+            check_white_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board)
+        }
+        PlayerColor::Black => {
+            check_black_pawn_does_en_passant(from, to, white_pawn_board, black_pawn_board, board)
+        }
     }
 }
 
-fn check_white_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
-    if (from/8 != 4) || (to/8 != 5) {
+fn check_white_pawn_does_en_passant(
+    from: u64,
+    to: u64,
+    white_pawn_board: Player,
+    black_pawn_board: Player,
+    board: Bitboard,
+) -> bool {
+    if (from / 8 != 4) || (to / 8 != 5) {
         return false;
     }
 
-    if to-from != 7 && to-from != 9 {
+    if to - from != 7 && to - from != 9 {
         return false;
     }
 
@@ -601,12 +685,12 @@ fn check_white_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
         return false;
     }
 
-    if to-from == 7 {
-        if !black_pawn_board.has_piece_on(from-1) {
+    if to - from == 7 {
+        if !black_pawn_board.has_piece_on(from - 1) {
             return false;
         }
     } else {
-        if !black_pawn_board.has_piece_on(from+1) {
+        if !black_pawn_board.has_piece_on(from + 1) {
             return false;
         }
     }
@@ -614,12 +698,18 @@ fn check_white_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
     true
 }
 
-fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player, black_pawn_board: Player, board: Bitboard) -> bool {
-    if (from/8 != 3) || (to/8 != 2) {
+fn check_black_pawn_does_en_passant(
+    from: u64,
+    to: u64,
+    white_pawn_board: Player,
+    black_pawn_board: Player,
+    board: Bitboard,
+) -> bool {
+    if (from / 8 != 3) || (to / 8 != 2) {
         return false;
     }
 
-    if from-to != 7 && from-to != 9 {
+    if from - to != 7 && from - to != 9 {
         return false;
     }
 
@@ -627,12 +717,12 @@ fn check_black_pawn_does_en_passant(from: u64, to: u64, white_pawn_board: Player
         return false;
     }
 
-    if from-to == 7 {
-        if !white_pawn_board.has_piece_on(from+1) {
+    if from - to == 7 {
+        if !white_pawn_board.has_piece_on(from + 1) {
             return false;
         }
     } else {
-        if !white_pawn_board.has_piece_on(from-1) {
+        if !white_pawn_board.has_piece_on(from - 1) {
             return false;
         }
     }
@@ -656,14 +746,31 @@ fn is_black_castling_move(from: u64, to: u64) -> bool {
     return from == 60 && (to == 58 || to == 62);
 }
 
-pub fn king_does_castling_correctly(from: u64, to: u64, color: PlayerColor, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+pub fn king_does_castling_correctly(
+    from: u64,
+    to: u64,
+    color: PlayerColor,
+    board: Bitboard,
+    white_board: Player,
+    black_board: Player,
+) -> bool {
     match color {
-        PlayerColor::White => white_king_does_castling_correctly(from, to, board, white_board, black_board),
-        PlayerColor::Black => black_king_does_castling_correctly(from, to, board, white_board, black_board),
+        PlayerColor::White => {
+            white_king_does_castling_correctly(from, to, board, white_board, black_board)
+        }
+        PlayerColor::Black => {
+            black_king_does_castling_correctly(from, to, board, white_board, black_board)
+        }
     }
 }
 
-fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+fn white_king_does_castling_correctly(
+    from: u64,
+    to: u64,
+    board: Bitboard,
+    white_board: Player,
+    black_board: Player,
+) -> bool {
     if from != 4 || (to != 2 && to != 6) {
         return false;
     }
@@ -673,7 +780,7 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
     }
 
     if white_board.has_king_moved {
-        return false
+        return false;
     }
 
     if to == 2 {
@@ -681,19 +788,38 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if white_board.rooks.is_square_empty(0) || !board.is_square_empty(1) || !board.is_square_empty(2) || !board.is_square_empty(3) {
+        if white_board.rooks.is_square_empty(0)
+            || !board.is_square_empty(1)
+            || !board.is_square_empty(2)
+            || !board.is_square_empty(3)
+        {
             return false;
         }
 
-        if check_king_in_check(4, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            4,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
 
-        if check_king_in_check(3, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            3,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
 
-        if check_king_in_check(2, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            2,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
     } else {
@@ -701,19 +827,37 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if white_board.rooks.is_square_empty(7) || !board.is_square_empty(5) || !board.is_square_empty(6) {
+        if white_board.rooks.is_square_empty(7)
+            || !board.is_square_empty(5)
+            || !board.is_square_empty(6)
+        {
             return false;
         }
 
-        if check_king_in_check(4, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            4,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
 
-        if check_king_in_check(5, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            5,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
 
-        if check_king_in_check(6, board.get_board(), black_board.clone(), PlayerColor::Black) {
+        if check_king_in_check(
+            6,
+            board.get_board(),
+            black_board.clone(),
+            PlayerColor::Black,
+        ) {
             return false;
         }
     }
@@ -721,7 +865,13 @@ fn white_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
     true
 }
 
-fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white_board: Player, black_board: Player) -> bool {
+fn black_king_does_castling_correctly(
+    from: u64,
+    to: u64,
+    board: Bitboard,
+    white_board: Player,
+    black_board: Player,
+) -> bool {
     if from != 60 || (to != 58 && to != 62) {
         return false;
     }
@@ -731,7 +881,7 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
     }
 
     if black_board.has_king_moved {
-        return false
+        return false;
     }
 
     if to == 58 {
@@ -739,19 +889,38 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if black_board.rooks.is_square_empty(56) || !board.is_square_empty(57) || !board.is_square_empty(58) || !board.is_square_empty(59) {
+        if black_board.rooks.is_square_empty(56)
+            || !board.is_square_empty(57)
+            || !board.is_square_empty(58)
+            || !board.is_square_empty(59)
+        {
             return false;
         }
 
-        if check_king_in_check(60, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            60,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
 
-        if check_king_in_check(59, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            59,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
 
-        if check_king_in_check(58, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            58,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
     } else {
@@ -759,19 +928,37 @@ fn black_king_does_castling_correctly(from: u64, to: u64, board: Bitboard, white
             return false;
         }
 
-        if black_board.rooks.is_square_empty(63) || !board.is_square_empty(61) || !board.is_square_empty(62) {
+        if black_board.rooks.is_square_empty(63)
+            || !board.is_square_empty(61)
+            || !board.is_square_empty(62)
+        {
             return false;
         }
 
-        if check_king_in_check(60, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            60,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
 
-        if check_king_in_check(61, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            61,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
 
-        if check_king_in_check(62, board.get_board(), white_board.clone(), PlayerColor::White) {
+        if check_king_in_check(
+            62,
+            board.get_board(),
+            white_board.clone(),
+            PlayerColor::White,
+        ) {
             return false;
         }
     }
@@ -797,8 +984,8 @@ pub fn is_big_castling(from: u64, to: u64, color: PlayerColor) -> bool {
 
 pub fn pawn_promotes(from: u64, to: u64, player_color: PlayerColor) -> bool {
     match player_color {
-        PlayerColor::White => from/8 == 6 && to-from == BOARD_SIZE,
-        PlayerColor::Black => from/8 == 1 && from-to == BOARD_SIZE
+        PlayerColor::White => from / 8 == 6 && to - from == BOARD_SIZE,
+        PlayerColor::Black => from / 8 == 1 && from - to == BOARD_SIZE,
     }
 }
 
@@ -807,8 +994,12 @@ pub fn pawn_promotes_correctly(to: u64, board: Bitboard) -> bool {
 }
 
 // 4. king is in check
-pub fn king_is_in_check(mut chessboard: Chessboard, from: u64, to: u64, color: PlayerColor) -> Result<bool, MoveError> {
-
+pub fn king_is_in_check(
+    mut chessboard: Chessboard,
+    from: u64,
+    to: u64,
+    color: PlayerColor,
+) -> Result<bool, MoveError> {
     let move_result = match color {
         PlayerColor::White => chessboard.white.make_move(from, to),
         PlayerColor::Black => chessboard.black.make_move(from, to),
@@ -832,13 +1023,14 @@ pub fn king_is_in_check(mut chessboard: Chessboard, from: u64, to: u64, color: P
             chessboard.white.king.get_board().trailing_zeros() as u64,
             chessboard.get_board(),
             chessboard.black.clone(),
-            PlayerColor::Black)),
+            PlayerColor::Black,
+        )),
 
         PlayerColor::Black => Ok(check_king_in_check(
             chessboard.black.king.get_board().trailing_zeros() as u64,
             chessboard.get_board(),
             chessboard.white.clone(),
-            PlayerColor::White)),
+            PlayerColor::White,
+        )),
     }
 }
-

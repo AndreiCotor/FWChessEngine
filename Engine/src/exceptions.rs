@@ -1,4 +1,3 @@
-
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum BitboardError {
     InvalidSquare,

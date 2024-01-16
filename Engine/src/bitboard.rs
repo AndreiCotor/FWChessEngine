@@ -1,22 +1,15 @@
-
-
 #[derive(Copy, Clone, Debug)]
 pub struct Bitboard {
     pub board: u64,
 }
 
 impl Bitboard {
-
     pub fn new() -> Bitboard {
-        Bitboard {
-            board: 0,
-        }
+        Bitboard { board: 0 }
     }
 
     pub fn from(board: u64) -> Bitboard {
-        Bitboard {
-            board,
-        }
+        Bitboard { board }
     }
 
     pub fn set_square(&mut self, square: u64) {

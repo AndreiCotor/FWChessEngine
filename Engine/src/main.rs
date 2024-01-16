@@ -1,9 +1,11 @@
+#![allow(dead_code)]
+
 mod bitboard;
 mod chessboard;
-mod player;
-mod piece;
 mod constants;
 mod exceptions;
+mod piece;
+mod player;
 mod tests;
 
 fn main() {
