@@ -50,6 +50,10 @@ impl Chessboard {
         self.black.pieces.get_board()
     }
 
+    pub fn is_finished(&self) -> bool {
+        self.black.king.get_num_squares() == 0 || self.white.king.get_num_squares() == 0
+    }
+
     pub fn perform_move(
         &mut self,
         from: &str,
@@ -256,8 +260,8 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        println!("Moved from {} to {}: ", from, to);
-        Chessboard::print_board(self);
+        //println!("Moved from {} to {}: ", from, to);
+        // Chessboard::print_board(self);
 
         Ok(())
     }
@@ -286,8 +290,8 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        println!("Moved from {} to {}: ", from, to);
-        Chessboard::print_board(self);
+        //println!("Moved from {} to {}: ", from, to);
+        // Chessboard::print_board(self);
 
         Ok(())
     }
@@ -327,8 +331,8 @@ impl Chessboard {
             }
         }
 
-        println!("Moved from {} to {} (castling): ", from, to);
-        Chessboard::print_board(self);
+        //println!("Moved from {} to {} (castling): ", from, to);
+        // Chessboard::print_board(self);
 
         Ok(())
     }
@@ -349,14 +353,14 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        println!("Moved from {} to {}: ", from, to);
+        //println!("Moved from {} to {}: ", from, to);
         // println!("Promoted to {:?}: ", new_piece);
-        Chessboard::print_board(self);
+        //Chessboard::print_board(self);
 
         Ok(())
     }
 
-    fn convert_square_to_index(square: &str) -> u64 {
+    pub fn convert_square_to_index(square: &str) -> u64 {
         let mut chars = square.chars();
         let file = chars.next().unwrap();
         let rank = chars.next().unwrap();
@@ -365,7 +369,7 @@ impl Chessboard {
         file + rank * BOARD_SIZE
     }
 
-    fn convert_index_to_square(index: u64) -> String {
+    pub fn convert_index_to_square(index: u64) -> String {
         let file = index % BOARD_SIZE;
         let rank = index / BOARD_SIZE;
         let file = (file as u8 + b'a') as char;
@@ -373,7 +377,7 @@ impl Chessboard {
         format!("{}{}", file, rank)
     }
 
-    fn print_board(&mut self) {
+    pub fn print_board(&mut self) {
         let board = self.get_board();
         let mut board = format!("{:064b}", board);
         board = board.chars().rev().collect::<String>();

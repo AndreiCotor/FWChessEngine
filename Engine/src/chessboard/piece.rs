@@ -408,7 +408,7 @@ fn check_king_in_check(
     false
 }
 
-fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
+pub fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
     let mut moves = 0;
 
     match color {
