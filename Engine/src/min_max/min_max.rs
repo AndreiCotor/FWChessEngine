@@ -4,8 +4,11 @@ use crate::chessboard::chessboard::Chessboard;
 use crate::chessboard::player::PlayerColor;
 use crate::evaluator::evaluate;
 use crate::min_max::next_move_generator::generate_next_moves;
+use crate::min_max::next_move_generator::perform_al_reduce_max_i64;
+use crate::min_max::next_move_generator::perform_al_reduce_min_i64;
+
 use mpi::topology::SystemCommunicator;
-const DEPTH: usize = 4;
+const DEPTH: usize = 5;
 
 fn min_max_with_alpha_beta_pruning(
     state: &Chessboard,
@@ -17,7 +20,7 @@ fn min_max_with_alpha_beta_pruning(
     size: i32,
     world: mpi::topology::SystemCommunicator,
 ) -> i64 {
-    if depth == 0 || state.is_finished() {
+    if depth == 0 || state.is_finished(){
         return evaluate(&state, player_color);
     }
 
@@ -60,8 +63,7 @@ fn min_max_with_alpha_beta_pruning(
 
                 local_alpha = max(local_alpha, value);
             }
-
-            world.all_reduce_into(&local_alpha, &mut alpha, &mpi::collective::SystemOperation::max());
+            perform_al_reduce_max_i64(&local_alpha, &mut alpha, &world, rank);
 
             value
         }
@@ -101,13 +103,30 @@ fn min_max_with_alpha_beta_pruning(
 
                 local_beta = min(local_beta, value);
             }
-
-            world.all_reduce_into(&local_beta, &mut beta, &mpi::collective::SystemOperation::min());
-
+            perform_al_reduce_min_i64(&local_beta, &mut beta, &world, rank);
             value
         }
     }
 }
+
+fn perform_all_reduce_max_i64(
+    local_value: &i64,
+    global_value: &mut i64,
+    world: &mpi::topology::SystemCommunicator,
+    _rank: i32
+) {
+    world.all_reduce_into(local_value, global_value, &mpi::collective::SystemOperation::max());
+}
+
+fn perform_all_reduce_min_i64(
+    local_value: &i64,
+    global_value: &mut i64,
+    world: &mpi::topology::SystemCommunicator,
+    _rank: i32
+) {
+    world.all_reduce_into(local_value, global_value, &mpi::collective::SystemOperation::min());
+}
+
 
 pub fn get_best_move(state: &Chessboard, world: &SystemCommunicator, rank: i32, size: i32) -> (u64, u64) {
 

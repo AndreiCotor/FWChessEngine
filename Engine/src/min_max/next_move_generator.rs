@@ -94,3 +94,21 @@ fn add_moves(
         }
     }
 }
+
+pub fn perform_al_reduce_max_i64(
+    local_value: &i64,
+    global_value: &mut i64,
+    world: &mpi::topology::SystemCommunicator,
+    _rank: i32
+) {
+    //world.all_reduce_into(local_value, global_value, &mpi::collective::SystemOperation::max());
+}
+
+pub fn perform_al_reduce_min_i64(
+    local_value: &i64,
+    global_value: &mut i64,
+    world: &mpi::topology::SystemCommunicator,
+    _rank: i32
+) {
+    //world.all_reduce_into(local_value, global_value, &mpi::collective::SystemOperation::min());
+}

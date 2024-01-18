@@ -4,6 +4,8 @@ use std::io;
 use crate::chessboard::chessboard::Chessboard;
 use crate::chessboard::player::PlayerColor;
 use crate::min_max::min_max::get_best_move;
+use std::thread;
+use std::time::Duration;
 
 mod constants;
 mod exceptions;
@@ -19,10 +21,13 @@ fn main() {
     let world = universe.world();
     let rank = world.rank();
     let size = world.size();
+    println!("Rank: {}, Size: {}", rank, size);
 
     let mut chessboard = Chessboard::new();
 
     let mut player_color = PlayerColor::White;
+    if rank==0 {
+    thread::sleep(Duration::from_millis(100));
     while !chessboard.is_finished() {
         chessboard.print_board();
 
@@ -64,5 +69,6 @@ fn main() {
             }
         }
     }
+}
     //chessboard.perform_move()
 }
