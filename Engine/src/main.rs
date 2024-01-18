@@ -13,7 +13,8 @@ mod min_max;
 mod evaluator;
 
 // convention: Computer plays white
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut chessboard = Chessboard::new();
 
     let mut player_color = PlayerColor::White;
@@ -24,7 +25,7 @@ fn main() {
             PlayerColor::White => {
                 println!("Computer moves...");
                 let chessboard_copy = chessboard.clone();
-                let best_move = get_best_move(&chessboard_copy);
+                let best_move = get_best_move(&chessboard_copy).await;
                 println!("{:?}", best_move);
 
                 let from = Chessboard::convert_index_to_square(best_move.0);
