@@ -41,6 +41,18 @@ impl Chessboard {
     pub fn get_board(&self) -> u64 {
         self.white.pieces.get_board() | self.black.pieces.get_board()
     }
+    
+    pub fn get_piece_type_color(&self, color: PlayerColor, index: u64)  -> PieceType {
+
+        let mut cloned_state = self.clone();
+        let piece_type = match color {
+            PlayerColor::White => cloned_state.white.get_piece_type(index),
+            PlayerColor::Black => cloned_state.black.get_piece_type(index),
+        }
+        .unwrap_or(PieceType::None);
+    
+        piece_type
+    }
 
     pub fn get_white_board(&self) -> u64 {
         self.white.pieces.get_board()
@@ -378,12 +390,6 @@ impl Chessboard {
     }
 
     pub fn print_board(&mut self) {
-        let board = self.get_board();
-        let mut board = format!("{:064b}", board);
-        board = board.chars().rev().collect::<String>();
-        let mut board = board.chars();
-
-        // add letters and numbers
         print!("  ");
         for i in 0..BOARD_SIZE {
             print!("{} ", (i as u8 + b'a') as char);
@@ -395,12 +401,6 @@ impl Chessboard {
             print!("{} ", i + 1);
 
             for j in 0..BOARD_SIZE {
-                let square = board.next().unwrap();
-                if square == 0 as char {
-                    print!(". ");
-                    continue;
-                }
-
                 let index = i * BOARD_SIZE + j;
                 let piece = self
                     .white
