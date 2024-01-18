@@ -16,7 +16,7 @@ const WHITE_ADVANTAGE: i64 = 10;
 pub fn evaluate(state: & Chessboard, player_color: PlayerColor) -> i64 {
     let white_material = calculate_material(state, PlayerColor::White) + WHITE_ADVANTAGE;
     let black_material = calculate_material(state, PlayerColor::Black);
-    println!("{} {}", white_material, black_material);
+    // println!("{} {}", white_material, black_material);
 
     match player_color {
         PlayerColor::White => white_material - black_material,

@@ -4,7 +4,7 @@ use crate::chessboard::player::PlayerColor;
 use crate::evaluator::evaluate;
 use crate::min_max::next_move_generator::generate_next_moves;
 
-const DEPTH: usize = 2;
+const DEPTH: usize = 5;
 
 fn min_max_with_alpha_beta_pruning(
     state: &Chessboard,
