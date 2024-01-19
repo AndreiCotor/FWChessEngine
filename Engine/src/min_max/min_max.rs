@@ -3,8 +3,10 @@ use crate::chessboard::chessboard::Chessboard;
 use crate::chessboard::player::PlayerColor;
 use crate::evaluator::evaluate;
 use crate::min_max::next_move_generator::generate_next_moves;
+extern crate ocl;
+use ocl::ProQue;
 
-const DEPTH: usize = 5;
+const DEPTH: usize = 3;
 
 fn min_max_with_alpha_beta_pruning(
     state: &Chessboard,
@@ -86,6 +88,33 @@ pub fn get_best_move(state: &Chessboard) -> (u64, u64) {
             result = next_move;
         }
     }
-
+    let _ = trivial();
     result
+}
+fn trivial() -> ocl::Result<()> {
+    let src = r#"
+        __kernel void add(__global float* buffer, float scalar) {
+            buffer[get_global_id(0)] += scalar;
+        }
+    "#;
+
+    let pro_que = ProQue::builder()
+        .src(src)
+        .dims(1 << 20)
+        .build()?;
+
+    let buffer = pro_que.create_buffer::<f32>()?;
+
+    let kernel = pro_que.kernel_builder("add")
+        .arg(&buffer)
+        .arg(10.0f32)
+        .build()?;
+
+    unsafe { kernel.enq()?; }
+
+    let mut vec = vec![0.0f32; buffer.len()];
+    buffer.read(&mut vec).enq()?;
+
+    println!("The value at index [{}] is now '{}'!", 200007, vec[200007]);
+    Ok(())
 }
