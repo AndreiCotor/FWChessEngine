@@ -25,7 +25,11 @@ async fn main() {
             PlayerColor::White => {
                 println!("Computer moves...");
                 let chessboard_copy = chessboard.clone();
+
+                let start = std::time::Instant::now();
                 let best_move = get_best_move(&chessboard_copy).await;
+                let duration = start.elapsed();
+                println!("Time elapsed: {} ms", duration.as_millis());
                 println!("{:?}", best_move);
 
                 let from = Chessboard::convert_index_to_square(best_move.0);
