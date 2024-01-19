@@ -23,8 +23,11 @@ fn main() {
         match player_color {
             PlayerColor::White => {
                 println!("Computer moves...");
+                let start = std::time::Instant::now();
                 let chessboard_copy = chessboard.clone();
                 let best_move = get_best_move(&chessboard_copy);
+                let duration = start.elapsed();
+                println!("Time elapsed: {} ms", duration.as_millis());
                 println!("{:?}", best_move);
 
                 let from = Chessboard::convert_index_to_square(best_move.0);
