@@ -266,8 +266,8 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        println!("Moved from {} to {}: ", from, to);
-        Chessboard::print_board(self);
+        // println!("Moved from {} to {}: ", from, to);
+        // Chessboard::print_board(self);
 
         match color {
             PlayerColor::White => {
