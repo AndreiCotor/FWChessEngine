@@ -1,13 +1,7 @@
 use crate::chessboard::bitboard::Bitboard;
 use crate::constants::BOARD_SIZE;
 use crate::exceptions::{MoveError, PieceError};
-use crate::chessboard::piece::{
-    check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid,
-    is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid,
-    is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly,
-    king_is_in_check, pawn_does_en_passant_correctly, pawn_does_not_capture, pawn_moves_diagonally,
-    pawn_promotes, pawn_promotes_correctly, PieceType,
-};
+use crate::chessboard::piece::{check_king_in_check, check_pawn_move_blocked, is_a_castling_move, is_big_castling, is_bishop_move_valid, is_king_move_blocked, is_king_move_valid, is_knight_move_valid, is_pawn_move_valid, is_queen_move_valid, is_rook_move_valid, is_small_castling, king_does_castling_correctly, king_is_in_check, pawn_does_en_passant_correctly, pawn_does_not_capture, pawn_moves_diagonally, pawn_promotes, pawn_promotes_correctly, PieceType};
 use crate::chessboard::player::{Player, PlayerColor};
 
 // Table orientation:
@@ -103,9 +97,9 @@ impl Chessboard {
         let is_move_valid = match piece_type {
             PieceType::Pawn => is_pawn_move_valid(from, to, color),
             PieceType::Knight => is_knight_move_valid(from, to),
-            PieceType::Bishop => is_bishop_move_valid(from, to),
-            PieceType::Rook => is_rook_move_valid(from, to),
-            PieceType::Queen => is_queen_move_valid(from, to),
+            PieceType::Bishop => is_bishop_move_valid(from, to, self.get_board()),
+            PieceType::Rook => is_rook_move_valid(from, to, self.get_board()),
+            PieceType::Queen => is_queen_move_valid(from, to, self.get_board()),
             PieceType::King => is_king_move_valid(from, to),
             PieceType::None => Err(PieceError::NoPiece),
         };
@@ -194,7 +188,7 @@ impl Chessboard {
                 PieceType::King => {
                     self.white.has_piece_on(to)
                         || self.black.get_piece_type(to) == Ok(PieceType::King)
-                        || self.black.has_king_around(to)
+                        // || self.black.has_king_around(to)
                         || is_king_move_blocked(
                             to,
                             color,
@@ -225,7 +219,7 @@ impl Chessboard {
                 PieceType::King => {
                     self.black.has_piece_on(to)
                         || self.white.get_piece_type(to) == Ok(PieceType::King)
-                        || self.white.has_king_around(to)
+                        // || self.white.has_king_around(to)
                         || is_king_move_blocked(
                             to,
                             color,
@@ -272,8 +266,23 @@ impl Chessboard {
             return Err(MoveError::InvalidMove);
         }
 
-        //println!("Moved from {} to {}: ", from, to);
+        // println!("Moved from {} to {}: ", from, to);
         // Chessboard::print_board(self);
+
+        match color {
+            PlayerColor::White => {
+                // check if black has the king in check and mark it accordingly
+                if check_king_in_check(self.black.get_king_position_on_board(), self.get_board(), self.white.clone()) {
+                    self.black.set_king_in_check(true);
+                }
+            },
+            PlayerColor::Black => {
+                // check if white has the king in check and mark it accordingly
+                if check_king_in_check(self.white.get_king_position_on_board(), self.get_board(), self.black.clone()) {
+                    self.white.set_king_in_check(true);
+                }
+            }
+        }
 
         Ok(())
     }

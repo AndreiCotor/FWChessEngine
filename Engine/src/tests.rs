@@ -115,6 +115,14 @@ mod tests {
             Ok(())
         );
         assert_eq!(
+            chessboard.perform_move("c4", "c3", PlayerColor::White),
+            Err(MoveError::InvalidMove)
+        );
+        assert_eq!(
+            chessboard.perform_move("c4", "c5", PlayerColor::White),
+            Err(MoveError::InvalidMove)
+        );
+        assert_eq!(
             chessboard.perform_move("c4", "b3", PlayerColor::White),
             Ok(())
         );

@@ -15,7 +15,7 @@ fn generate_white_moves(chessboard: &Chessboard) -> Vec<(u64, u64)> {
 
     for bit in 0..64 {
         let potential_move = if chessboard.white.pawns.get_square(bit) {
-            piece::get_pawn_moves(bit, PlayerColor::White)
+            piece::get_pawn_moves(bit, PlayerColor::White, chessboard.get_board())
         }
         else if chessboard.white.bishops.get_square(bit) {
             piece::get_bishop_moves(bit, chessboard.get_board())
@@ -47,7 +47,7 @@ fn generate_black_moves(chessboard: &Chessboard) -> Vec<(u64, u64)> {
 
     for bit in 0..64 {
         let potential_move = if chessboard.black.pawns.get_square(bit) {
-            piece::get_pawn_moves(bit, PlayerColor::Black)
+            piece::get_pawn_moves(bit, PlayerColor::Black, chessboard.get_board())
         }
         else if chessboard.black.bishops.get_square(bit) {
             piece::get_bishop_moves(bit, chessboard.get_board())
