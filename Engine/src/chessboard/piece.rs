@@ -31,8 +31,8 @@ pub fn is_pawn_move_valid(from: u64, to: u64, color: PlayerColor) -> Result<(), 
 
 fn is_pawn_move_valid_for_white(
     from_rank: u64,
-    rank_diff: i64,
-    file_diff: i64,
+    rank_diff: i128,
+    file_diff: i128,
 ) -> Result<(), PieceError> {
     if from_rank == 1 && rank_diff == 2 && file_diff == 0 {
         return Ok(());
@@ -55,8 +55,8 @@ fn is_pawn_move_valid_for_white(
 
 fn is_pawn_move_valid_for_black(
     from_rank: u64,
-    rank_diff: i64,
-    file_diff: i64,
+    rank_diff: i128,
+    file_diff: i128,
 ) -> Result<(), PieceError> {
     if from_rank == 6 && rank_diff == -2 && file_diff == 0 {
         return Ok(());
@@ -100,7 +100,7 @@ pub fn is_knight_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     Err(PieceError::InvalidMove)
 }
 
-pub fn is_bishop_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
+pub fn is_bishop_move_valid(from: u64, to: u64, board: u64) -> Result<(), PieceError> {
     let result = basic_position_check(from, to);
     if result.is_err() {
         return Err(result.unwrap_err());
@@ -109,13 +109,16 @@ pub fn is_bishop_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     let (_, rank_diff, file_diff) = result.unwrap();
 
     if rank_diff == file_diff || rank_diff == -file_diff {
-        return Ok(());
+        let bishop_moves = get_bishop_moves(from, board);
+        if (bishop_moves & (1 << to)) != 0 { // bishop can move to the square (is not blocked)
+            return Ok(());
+        }
     }
 
     Err(PieceError::InvalidMove)
 }
 
-pub fn is_rook_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
+pub fn is_rook_move_valid(from: u64, to: u64, board: u64) -> Result<(), PieceError> {
     let result = basic_position_check(from, to);
     if result.is_err() {
         return Err(result.unwrap_err());
@@ -124,13 +127,16 @@ pub fn is_rook_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     let (_, rank_diff, file_diff) = result.unwrap();
 
     if rank_diff == 0 || file_diff == 0 {
-        return Ok(());
+        let rook_moves = get_rook_moves(from, board);
+        if (rook_moves & (1 << to)) != 0 { // rook can move to the square (is not blocked)
+            return Ok(());
+        }
     }
 
     Err(PieceError::InvalidMove)
 }
 
-pub fn is_queen_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
+pub fn is_queen_move_valid(from: u64, to: u64, board: u64) -> Result<(), PieceError> {
     let result = basic_position_check(from, to);
     if result.is_err() {
         return Err(result.unwrap_err());
@@ -139,7 +145,10 @@ pub fn is_queen_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     let (_, rank_diff, file_diff) = result.unwrap();
 
     if rank_diff == 0 || file_diff == 0 || rank_diff == file_diff || rank_diff == -file_diff {
-        return Ok(());
+        let queen_moves = get_queen_moves(from, board);
+        if (queen_moves & (1 << to)) != 0 { // queen can move to the square (is not blocked)
+            return Ok(());
+        }
     }
 
     Err(PieceError::InvalidMove)
@@ -168,7 +177,7 @@ pub fn is_king_move_valid(from: u64, to: u64) -> Result<(), PieceError> {
     Err(PieceError::InvalidMove)
 }
 
-fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceError> {
+fn basic_position_check(from: u64, to: u64) -> Result<(u64, i128, i128), PieceError> {
     if (from == to) || (from >= NUM_SQUARES) || (to >= NUM_SQUARES) {
         return Err(PieceError::InvalidMove);
     }
@@ -183,10 +192,10 @@ fn basic_position_check(from: u64, to: u64) -> Result<(u64, i64, i64), PieceErro
         return Err(PieceError::OutOfBounds);
     }
 
-    let to_rank: i64 = to_rank as i64;
-    let to_file: i64 = to_file as i64;
-    let rank_diff: i64 = to_rank - from_rank as i64;
-    let file_diff: i64 = to_file - from_file as i64;
+    let to_rank: i128 = to_rank as i128;
+    let to_file: i128 = to_file as i128;
+    let rank_diff: i128 = to_rank - from_rank as i128;
+    let file_diff: i128 = to_file - from_file as i128;
 
     Ok((from_rank, rank_diff, file_diff))
 }
@@ -227,8 +236,8 @@ pub fn check_pawn_move_blocked(
 
 fn check_pawn_move_blocked_for_white(
     from_rank: u64,
-    rank_diff: i64,
-    file_diff: i64,
+    rank_diff: i128,
+    file_diff: i128,
     board: Bitboard,
     white_board: Player,
     mut black_board: Player,
@@ -271,8 +280,8 @@ fn check_pawn_move_blocked_for_white(
 
 fn check_pawn_move_blocked_for_black(
     from_rank: u64,
-    rank_diff: i64,
-    file_diff: i64,
+    rank_diff: i128,
+    file_diff: i128,
     board: Bitboard,
     mut white_board: Player,
     black_board: Player,
@@ -319,16 +328,15 @@ pub fn is_king_move_blocked(
     black_board: Player,
 ) -> bool {
     match color {
-        PlayerColor::White => check_king_in_check(to, board, black_board, color),
-        PlayerColor::Black => check_king_in_check(to, board, white_board, color),
+        PlayerColor::White => check_king_in_check(to, board, black_board),
+        PlayerColor::Black => check_king_in_check(to, board, white_board),
     }
 }
 
-fn check_king_in_check(
+pub fn check_king_in_check(
     king_pos: u64,
     board: u64,
     opponent: Player,
-    opponent_color: PlayerColor,
 ) -> bool {
     let mut opponent_pieces = opponent.pieces.get_board();
 
@@ -357,7 +365,7 @@ fn check_king_in_check(
 
     for i in 0..NUM_SQUARES {
         if (opponent_pawns & (1 << i)) != 0 {
-            opponent_pawn_moves |= get_pawn_moves(i, opponent_color);
+            opponent_pawn_moves |= get_pawn_attack_moves(i, opponent.color);
         }
 
         if (opponent_knights & (1 << i)) != 0 {
@@ -408,23 +416,59 @@ fn check_king_in_check(
     false
 }
 
-pub fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
+pub fn get_pawn_attack_moves(pos: u64, color: PlayerColor) -> u64 {
     let mut moves = 0;
 
     match color {
         PlayerColor::White => {
+            if pos % 8 != 0 && pos < 56 {
+                moves |= 1 << (pos + 7);
+            }
+
+            if pos % 8 != 7 && pos < 56 {
+                moves |= 1 << (pos + 9);
+            }
+        }
+        PlayerColor::Black => {
+            if pos % 8 != 0 && pos > 7 {
+                moves |= 1 << (pos - 9);
+            }
+
+            if pos % 8 != 7 && pos > 7 {
+                moves |= 1 << (pos - 7);
+            }
+        }
+    }
+
+    moves
+}
+
+pub fn get_pawn_moves(pos: u64, color: PlayerColor, board: u64) -> u64 {
+    let mut moves = 0;
+
+    match color {
+        // check if the pawn is not on the last rank
+        // check if the pawn can move forward 2 squares
+        PlayerColor::White => {
             if pos < 56 {
                 moves |= 1 << (pos + 8);
+            }
+            if (pos / 8) == 1 && (board & (1 << (pos + 8)) == 0) {
+                moves |= 1 << (pos + 16);
             }
         }
         PlayerColor::Black => {
             if pos > 7 {
                 moves |= 1 << (pos - 8);
             }
+            if (pos / 8) == 6 && (board & (1 << (pos - 8)) == 0) {
+                moves |= 1 << (pos - 16);
+            }
         }
     }
 
     if pos % 8 != 0 {
+        // check if the pawn is not on the left file
         match color {
             PlayerColor::White => {
                 if pos < 56 {
@@ -440,6 +484,7 @@ pub fn get_pawn_moves(pos: u64, color: PlayerColor) -> u64 {
     }
 
     if pos % 8 != 7 {
+        // check if the pawn is not on the right file
         match color {
             PlayerColor::White => {
                 if pos < 56 {
@@ -506,10 +551,10 @@ pub fn get_knight_moves(pos: u64) -> u64 {
 pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
     let mut moves = 0;
 
-    let pos: i64 = pos as i64;
+    let pos: i128 = pos as i128;
 
     let mut i = pos + 9;
-    while i < NUM_SQUARES as i64 && i % 8 != 0 {
+    while i < NUM_SQUARES as i128 && i % 8 != 0 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -518,7 +563,7 @@ pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
     }
 
     i = pos + 7;
-    while i < NUM_SQUARES as i64 && i % 8 != 7 {
+    while i < NUM_SQUARES as i128 && i % 8 != 7 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -550,10 +595,10 @@ pub fn get_bishop_moves(pos: u64, board: u64) -> u64 {
 pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
     let mut moves = 0;
 
-    let pos: i64 = pos as i64;
+    let pos: i128 = pos as i128;
 
-    let mut i: i64 = pos + 8;
-    while i < NUM_SQUARES as i64 {
+    let mut i: i128 = pos + 8;
+    while i < NUM_SQUARES as i128 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -571,7 +616,7 @@ pub fn get_rook_moves(pos: u64, board: u64) -> u64 {
     }
 
     i = pos + 1;
-    while i < NUM_SQUARES as i64 && i % 8 != 0 {
+    while i < NUM_SQUARES as i128 && i % 8 != 0 {
         moves |= 1 << i;
         if (board & (1 << i)) != 0 {
             break;
@@ -775,7 +820,7 @@ fn white_king_does_castling_correctly(
         return false;
     }
 
-    if white_board.has_king_moved {
+    if white_board.has_king_moved || white_board.has_king_been_in_check {
         return false;
     }
 
@@ -796,7 +841,6 @@ fn white_king_does_castling_correctly(
             4,
             board.get_board(),
             black_board.clone(),
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -805,7 +849,6 @@ fn white_king_does_castling_correctly(
             3,
             board.get_board(),
             black_board.clone(),
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -814,7 +857,6 @@ fn white_king_does_castling_correctly(
             2,
             board.get_board(),
             black_board,
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -834,7 +876,6 @@ fn white_king_does_castling_correctly(
             4,
             board.get_board(),
             black_board.clone(),
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -843,7 +884,6 @@ fn white_king_does_castling_correctly(
             5,
             board.get_board(),
             black_board.clone(),
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -852,7 +892,6 @@ fn white_king_does_castling_correctly(
             6,
             board.get_board(),
             black_board,
-            PlayerColor::Black,
         ) {
             return false;
         }
@@ -876,7 +915,7 @@ fn black_king_does_castling_correctly(
         return false;
     }
 
-    if black_board.has_king_moved {
+    if black_board.has_king_moved || black_board.has_king_been_in_check {
         return false;
     }
 
@@ -897,7 +936,6 @@ fn black_king_does_castling_correctly(
             60,
             board.get_board(),
             white_board.clone(),
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -906,7 +944,6 @@ fn black_king_does_castling_correctly(
             59,
             board.get_board(),
             white_board.clone(),
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -915,7 +952,6 @@ fn black_king_does_castling_correctly(
             58,
             board.get_board(),
             white_board,
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -935,7 +971,6 @@ fn black_king_does_castling_correctly(
             60,
             board.get_board(),
             white_board.clone(),
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -944,7 +979,6 @@ fn black_king_does_castling_correctly(
             61,
             board.get_board(),
             white_board.clone(),
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -953,7 +987,6 @@ fn black_king_does_castling_correctly(
             62,
             board.get_board(),
             white_board,
-            PlayerColor::White,
         ) {
             return false;
         }
@@ -1019,14 +1052,12 @@ pub fn king_is_in_check(
             chessboard.white.king.get_board().trailing_zeros() as u64,
             chessboard.get_board(),
             chessboard.black.clone(),
-            PlayerColor::Black,
         )),
 
         PlayerColor::Black => Ok(check_king_in_check(
             chessboard.black.king.get_board().trailing_zeros() as u64,
             chessboard.get_board(),
             chessboard.white.clone(),
-            PlayerColor::White,
         )),
     }
 }

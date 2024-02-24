@@ -22,6 +22,7 @@ pub struct Player {
     pub has_left_rook_moved: bool,
     pub has_right_rook_moved: bool,
     pub has_king_moved: bool,
+    pub has_king_been_in_check: bool,
 }
 
 impl Player {
@@ -116,6 +117,7 @@ impl Player {
             has_left_rook_moved: false,
             has_right_rook_moved: false,
             has_king_moved: false,
+            has_king_been_in_check: false,
         }
     }
 
@@ -344,5 +346,14 @@ impl Player {
 
         let king_board = Bitboard::from(king);
         king_board.get_num_squares() > 0
+    }
+
+    // 0..64
+    pub fn get_king_position_on_board(&self) -> u64 {
+        self.king.get_board().trailing_zeros() as u64
+    }
+
+    pub fn set_king_in_check(&mut self, value: bool) {
+        self.has_king_been_in_check = true;
     }
 }
